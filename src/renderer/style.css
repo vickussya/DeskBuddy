@@ -459,3 +459,57 @@ html, body {
 body.muted #btn-mute {
   opacity: 0.5;
 }
+
+/* ===== Mini-mode ===== */
+#mini-view {
+  display: none;
+  width: 80px;
+  height: 88px;
+  cursor: pointer;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+#mini-character-img {
+  width: 72px;
+  height: 80px;
+  object-fit: contain;
+  object-position: bottom center;
+  border-radius: 50% 50% 44% 44% / 50% 50% 40% 40%;
+  background: rgba(255, 248, 235, 0.92);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.18),
+    0 0 0 3px #c9a96e,
+    0 0 0 5px rgba(201,169,110,0.25);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  image-rendering: pixelated;
+}
+
+#mini-character-img:hover {
+  transform: scale(1.07);
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.22),
+    0 0 0 3px #a07840,
+    0 0 0 6px rgba(201,169,110,0.3);
+}
+
+/* When mini-mode is active */
+body.mini-mode {
+  width: 80px;
+  height: 88px;
+}
+
+body.mini-mode #app {
+  width: 80px;
+  height: 88px;
+}
+
+body.mini-mode #drag-bar,
+body.mini-mode #main-content,
+body.mini-mode #task-editor {
+  display: none !important;
+}
+
+body.mini-mode #mini-view {
+  display: flex;
+}

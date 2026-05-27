@@ -1,3 +1,2 @@
 @echo off
-cd /d "%~dp0"
-cmd /k npm start
+wscript.exe "%~dp0start-deskbuddy.vbs"

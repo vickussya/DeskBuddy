@@ -20,6 +20,10 @@ const pageCurrent = document.getElementById('page-current');
 const pageTotal = document.getElementById('page-total');
 const characterSound = document.getElementById('character-sound');
 
+const btnMinimize = document.getElementById('btn-minimize');
+const miniView = document.getElementById('mini-view');
+const miniCharacterImg = document.getElementById('mini-character-img');
+
 const taskEditor = document.getElementById('task-editor');
 const taskEditorList = document.getElementById('task-editor-list');
 const newTaskInput = document.getElementById('new-task-input');
@@ -51,14 +55,28 @@ async function init() {
   setupListeners();
 }
 
+function applyMiniMode(isMini) {
+  if (isMini) {
+    document.body.classList.add('mini-mode');
+    // Mirror the character image into the mini view
+    miniCharacterImg.src = characterImg.src;
+  } else {
+    document.body.classList.remove('mini-mode');
+  }
+}
+
 /* ===== Character image ===== */
 async function loadCharacterImage(character) {
   const imgPath = await window.api.getCharacterImagePath(character);
-  if (imgPath) {
-    characterImg.src = `file://${imgPath.replace(/\\/g, '/')}`;
-  }
+  const src = imgPath
+    ? `file://${imgPath.replace(/\\/g, '/')}`
+    : getFallbackSVG(character);
+  characterImg.src = src;
+  miniCharacterImg.src = src;
   characterImg.onerror = () => {
-    characterImg.src = getFallbackSVG(character);
+    const fallback = getFallbackSVG(character);
+    characterImg.src = fallback;
+    miniCharacterImg.src = fallback;
   };
 }
 
@@ -160,6 +178,9 @@ function setupListeners() {
 
   btnHide.addEventListener('click', () => window.api.hideWindow());
 
+  btnMinimize.addEventListener('click', () => window.api.toggleMiniMode());
+  miniView.addEventListener('click', () => window.api.toggleMiniMode());
+
   characterImg.addEventListener('click', () => playCharacterSound());
 
   btnPrev.addEventListener('click', () => {
@@ -200,6 +221,10 @@ function setupListeners() {
   window.api.onCharacterChanged(async (char) => {
     activeCharacter = char;
     await loadCharacterImage(char);
+  });
+
+  window.api.onMiniModeChanged((isMini) => {
+    applyMiniMode(isMini);
   });
 }
 

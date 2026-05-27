@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, shell, dialog, nativeImage } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, shell, dialog, nativeImage, screen } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const chokidar = require('chokidar');
@@ -79,6 +79,11 @@ let settingsWindow = null;
 let tray = null;
 let fileWatcher = null;
 let midnightTimer = null;
+let isMiniMode = false;
+
+const FULL_W = 380, FULL_H = 260;
+const MINI_W = 80, MINI_H = 88;
+const MARGIN = 16;
 
 // --- Ensure tasks.txt exists ---
 function ensureTasksFile() {
@@ -163,10 +168,15 @@ function getActiveCharacter() {
 
 // --- Auto-start helpers ---
 function setAutoStart(enabled) {
+  const wscriptPath = path.join(
+    process.env.SystemRoot || 'C:\\Windows',
+    'System32', 'wscript.exe'
+  );
+  const vbsPath = path.join(__dirname, 'start-deskbuddy.vbs');
   app.setLoginItemSettings({
     openAtLogin: enabled,
-    path: process.execPath,
-    args: ['--autostart']
+    path: wscriptPath,
+    args: [vbsPath]
   });
   store.set('settings.autoStart', enabled);
 }
@@ -178,12 +188,16 @@ function getAutoStartStatus() {
 // --- Create main window ---
 function createMainWindow() {
   const pos = store.get('windowPosition', { x: null, y: null });
+  const { workArea } = screen.getPrimaryDisplay();
+
+  const startX = pos.x !== null ? pos.x : workArea.x + workArea.width - FULL_W - MARGIN;
+  const startY = pos.y !== null ? pos.y : workArea.y + workArea.height - FULL_H - MARGIN;
 
   mainWindow = new BrowserWindow({
-    width: 380,
-    height: 260,
-    x: pos.x !== null ? pos.x : undefined,
-    y: pos.y !== null ? pos.y : undefined,
+    width: FULL_W,
+    height: FULL_H,
+    x: startX,
+    y: startY,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -439,6 +453,30 @@ ipcMain.handle('get-character-image-path', (_, character) => {
 ipcMain.handle('hide-window', () => {
   if (mainWindow) mainWindow.hide();
   return true;
+});
+
+ipcMain.handle('toggle-mini-mode', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return isMiniMode;
+  isMiniMode = !isMiniMode;
+  const { workArea } = screen.getPrimaryDisplay();
+
+  mainWindow.setResizable(true);
+  if (isMiniMode) {
+    mainWindow.setSize(MINI_W, MINI_H);
+    mainWindow.setPosition(
+      workArea.x + workArea.width - MINI_W - MARGIN,
+      workArea.y + workArea.height - MINI_H - MARGIN
+    );
+  } else {
+    mainWindow.setSize(FULL_W, FULL_H);
+    const pos = store.get('windowPosition', { x: null, y: null });
+    const rx = pos.x !== null ? pos.x : workArea.x + workArea.width - FULL_W - MARGIN;
+    const ry = pos.y !== null ? pos.y : workArea.y + workArea.height - FULL_H - MARGIN;
+    mainWindow.setPosition(rx, ry);
+  }
+  mainWindow.setResizable(false);
+  mainWindow.webContents.send('mini-mode-changed', isMiniMode);
+  return isMiniMode;
 });
 
 ipcMain.handle('close-settings', () => {

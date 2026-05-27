@@ -1,1 +1,3 @@
-@echo off`ncd /d "%~dp0"`nnpm start
+@echo off
+cd /d "%~dp0"
+cmd /k npm start

@@ -461,13 +461,19 @@ body.muted #btn-mute {
 }
 
 /* ===== Mini-mode ===== */
+
+/* Hidden by default; shown as fixed overlay when active */
 #mini-view {
   display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 80px;
   height: 88px;
   cursor: pointer;
   align-items: flex-end;
   justify-content: center;
+  -webkit-app-region: no-drag;
 }
 
 #mini-character-img {
@@ -478,34 +484,31 @@ body.muted #btn-mute {
   border-radius: 50% 50% 44% 44% / 50% 50% 40% 40%;
   background: rgba(255, 248, 235, 0.92);
   box-shadow:
-    0 4px 16px rgba(0,0,0,0.18),
+    0 4px 16px rgba(0,0,0,0.22),
     0 0 0 3px #c9a96e,
-    0 0 0 5px rgba(201,169,110,0.25);
+    0 0 0 6px rgba(201,169,110,0.28);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   image-rendering: pixelated;
 }
 
 #mini-character-img:hover {
-  transform: scale(1.07);
+  transform: scale(1.08);
   box-shadow:
-    0 6px 20px rgba(0,0,0,0.22),
+    0 6px 20px rgba(0,0,0,0.28),
     0 0 0 3px #a07840,
-    0 0 0 6px rgba(201,169,110,0.3);
+    0 0 0 6px rgba(201,169,110,0.4);
 }
 
-/* When mini-mode is active */
+/* Active mini-mode state */
 body.mini-mode {
   width: 80px;
   height: 88px;
 }
 
 body.mini-mode #app {
-  width: 80px;
-  height: 88px;
+  display: none;
 }
 
-body.mini-mode #drag-bar,
-body.mini-mode #main-content,
 body.mini-mode #task-editor {
   display: none !important;
 }

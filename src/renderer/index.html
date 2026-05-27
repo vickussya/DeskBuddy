@@ -43,9 +43,14 @@
         </div>
       </div>
     </div>
+
+    <!-- Mini-mode circle (inside #app so it's within the layout context) -->
+    <div id="mini-view">
+      <img id="mini-character-img" src="" alt="character" title="Click to expand" />
+    </div>
   </div>
 
-  <!-- Inline task editor (appears inside bubble area) -->
+  <!-- Inline task editor overlay -->
   <div id="task-editor" class="hidden">
     <div id="task-editor-inner">
       <h3>Edit Tasks</h3>
@@ -59,11 +64,6 @@
         <button id="btn-editor-cancel">Cancel</button>
       </div>
     </div>
-  </div>
-
-  <!-- Mini-mode view: small circle with character only -->
-  <div id="mini-view">
-    <img id="mini-character-img" src="" alt="character" title="Click to expand" />
   </div>
 
   <audio id="character-sound" preload="auto"></audio>

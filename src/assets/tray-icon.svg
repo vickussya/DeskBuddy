@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+  <rect width="16" height="16" rx="3" fill="#c9a96e"/>
+  <!-- Cat face -->
+  <circle cx="8" cy="9" r="5" fill="#f4a261"/>
+  <polygon points="4,6 3,2 6,5" fill="#f4a261"/>
+  <polygon points="12,6 13,2 10,5" fill="#f4a261"/>
+  <circle cx="6.5" cy="8.5" r="1" fill="#2c1a0e"/>
+  <circle cx="9.5" cy="8.5" r="1" fill="#2c1a0e"/>
+  <ellipse cx="8" cy="10.5" rx="1" ry="0.7" fill="#e07b60"/>
+</svg>

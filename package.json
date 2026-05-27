@@ -1,0 +1,29 @@
+{
+  "name": "deskbuddy",
+  "version": "1.0.0",
+  "description": "A friendly desktop companion with daily task checklist",
+  "main": "main.js",
+  "scripts": {
+    "start": "node launch.js",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "electron": "^28.3.3"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.deskbuddy.app",
+    "productName": "DeskBuddy",
+    "win": {
+      "target": "nsis",
+      "icon": "src/assets/tray-icon.ico"
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache"
+    ]
+  }
+}

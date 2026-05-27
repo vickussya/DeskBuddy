@@ -4,6 +4,9 @@ A friendly always-on-top desktop companion for Windows that shows your daily tas
 
 ![DeskBuddy preview](src/assets/characters/cat.svg)
 
+<img width="636" height="258" alt="Screenshot 2026-05-27 143158" src="https://github.com/user-attachments/assets/b42e256c-9521-4b89-968f-c240099fee87" />
+
+
 ## Features
 
 - **Floating window** — frameless, always on top, draggable, remembers its position

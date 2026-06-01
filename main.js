@@ -79,7 +79,7 @@ let tray = null;
 let fileWatcher = null;
 let isMiniMode = false;
 
-const FULL_W = 380, FULL_H = 260;
+const FULL_W = 460, FULL_H = 280;
 const MINI_W = 80, MINI_H = 88;
 const MARGIN = 16;
 

@@ -67,7 +67,6 @@ function initStore() {
     },
     schedule: [],
     windowPosition: { x: null, y: null },
-    lastResetDate: null,
     checkedTasks: []
   });
   // Always keep tasksFilePath up-to-date in settings
@@ -78,7 +77,6 @@ let mainWindow = null;
 let settingsWindow = null;
 let tray = null;
 let fileWatcher = null;
-let midnightTimer = null;
 let isMiniMode = false;
 
 const FULL_W = 380, FULL_H = 260;
@@ -121,34 +119,6 @@ function saveTasksToFile(tasks) {
   fs.writeFileSync(tasksFilePath, content, 'utf8');
 }
 
-// --- Daily reset at midnight ---
-function scheduleMidnightReset() {
-  if (midnightTimer) clearTimeout(midnightTimer);
-  const now = new Date();
-  const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
-  const msUntilMidnight = tomorrow - now;
-  midnightTimer = setTimeout(() => {
-    store.set('checkedTasks', []);
-    store.set('lastResetDate', new Date().toDateString());
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('tasks-reset');
-    }
-    scheduleMidnightReset();
-  }, msUntilMidnight);
-}
-
-// --- Check if reset needed on startup ---
-function checkDailyReset() {
-  const lastReset = store.get('lastResetDate');
-  const today = new Date().toDateString();
-  if (lastReset !== today) {
-    store.set('checkedTasks', []);
-    store.set('lastResetDate', today);
-  }
-}
-
 // --- Get active character based on schedule ---
 function getActiveCharacter() {
   const schedule = store.get('schedule', []);
@@ -167,22 +137,22 @@ function getActiveCharacter() {
 }
 
 // --- Auto-start helpers ---
+const ELECTRON_EXE = path.join(__dirname, 'node_modules', 'electron', 'dist', 'electron.exe');
+
 function setAutoStart(enabled) {
-  const wscriptPath = path.join(
-    process.env.SystemRoot || 'C:\\Windows',
-    'System32', 'wscript.exe'
-  );
-  const vbsPath = path.join(__dirname, 'start-deskbuddy.vbs');
   app.setLoginItemSettings({
     openAtLogin: enabled,
-    path: wscriptPath,
-    args: [vbsPath]
+    path: ELECTRON_EXE,
+    args: [__dirname]
   });
   store.set('settings.autoStart', enabled);
 }
 
 function getAutoStartStatus() {
-  return app.getLoginItemSettings().openAtLogin;
+  return app.getLoginItemSettings({
+    path: ELECTRON_EXE,
+    args: [__dirname]
+  }).openAtLogin;
 }
 
 // --- Create main window ---
@@ -340,7 +310,6 @@ function startFileWatcher() {
 // --- IPC handlers ---
 function setupIPC() {
 ipcMain.handle('get-initial-data', () => {
-  checkDailyReset();
   const tasks = loadTasksFromFile();
   const settings = store.get('settings');
   return {
@@ -489,8 +458,6 @@ ipcMain.handle('close-settings', () => {
 app.on('ready', () => {
   initStore();
   ensureTasksFile();
-  checkDailyReset();
-  scheduleMidnightReset();
   setupIPC();
   createTray();
   createMainWindow();
@@ -503,7 +470,6 @@ app.on('window-all-closed', (e) => {
 
 app.on('before-quit', () => {
   if (fileWatcher) fileWatcher.close();
-  if (midnightTimer) clearTimeout(midnightTimer);
   if (mainWindow) {
     mainWindow.removeAllListeners('close');
     mainWindow.destroy();

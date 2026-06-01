@@ -208,11 +208,6 @@ function setupListeners() {
     renderTasks();
   });
 
-  window.api.onTasksReset(() => {
-    checkedTasks = [];
-    renderTasks();
-  });
-
   window.api.onSettingsUpdated((newSettings) => {
     settings = { ...settings, ...newSettings };
     applyMuteState();

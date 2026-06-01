@@ -18,7 +18,6 @@ contextBridge.exposeInMainWorld('api', {
   closeSettings: () => ipcRenderer.invoke('close-settings'),
 
   onTasksUpdated: (cb) => ipcRenderer.on('tasks-updated', (_, data) => cb(data)),
-  onTasksReset: (cb) => ipcRenderer.on('tasks-reset', () => cb()),
   onSettingsUpdated: (cb) => ipcRenderer.on('settings-updated', (_, data) => cb(data)),
   onCharacterChanged: (cb) => ipcRenderer.on('character-changed', (_, char) => cb(char)),
   onMiniModeChanged: (cb) => ipcRenderer.on('mini-mode-changed', (_, val) => cb(val)),

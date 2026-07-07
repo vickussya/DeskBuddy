@@ -1,7 +1,11 @@
-const { app, BrowserWindow, Tray, Menu, ipcMain, shell, dialog, nativeImage, screen } = require('electron');
+const { app, BrowserWindow, Tray, Menu, ipcMain, shell, dialog, nativeImage, screen, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const chokidar = require('chokidar');
+
+// Force English regardless of the OS locale — affects native form controls
+// (e.g. <input type="date">) that JS date formatting can't override on its own.
+app.commandLine.appendSwitch('lang', 'en-US');
 
 // --- Simple JSON store (replaces electron-store) ---
 class JsonStore {
@@ -196,7 +200,7 @@ function loadTasksFromFile(id) {
     const existingTasks = store.get(`tasksByWorkspace.${id}`, []);
     const newTasks = lines.map((text, i) => {
       const existing = existingTasks.find(t => t.text === text);
-      return { id: existing ? existing.id : Date.now() + i, text };
+      return { ...(existing || {}), id: existing ? existing.id : Date.now() + i, text };
     });
     store.set(`tasksByWorkspace.${id}`, newTasks);
     const checked = store.get(`checkedByWorkspace.${id}`, []);
@@ -731,6 +735,50 @@ ipcMain.handle('get-character-image-path', (_, character) => {
 
 } // end setupIPC
 
+// --- Deadlines & reminders ---
+function formatDateId(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function checkDeadlinesAndNotify() {
+  const todayId = formatDateId(new Date());
+  if (store.get('lastDeadlineNotifyDate') === todayId) return;
+  store.set('lastDeadlineNotifyDate', todayId);
+
+  const workspaces = store.get('workspaces', []);
+  const dueTasks = [];
+  for (const ws of workspaces) {
+    const tasks = store.get(`tasksByWorkspace.${ws.id}`, []);
+    const checked = store.get(`checkedByWorkspace.${ws.id}`, []);
+    for (const task of tasks) {
+      if (task.dueDate && task.dueDate <= todayId && !checked.includes(task.id)) {
+        dueTasks.push(task);
+      }
+    }
+  }
+
+  if (dueTasks.length === 0 || !Notification.isSupported()) return;
+
+  const body = dueTasks.length === 1
+    ? dueTasks[0].text
+    : `${dueTasks.slice(0, 2).map(t => t.text).join(', ')}${dueTasks.length > 2 ? `, +${dueTasks.length - 2} more` : ''}`;
+
+  const notification = new Notification({
+    title: dueTasks.length === 1 ? 'Task due' : `${dueTasks.length} tasks due`,
+    body
+  });
+  notification.on('click', () => {
+    createStudioWindow();
+    if (studioWindow && !studioWindow.isDestroyed()) {
+      studioWindow.webContents.send('navigate-to-section', 'calendar');
+    }
+  });
+  notification.show();
+}
+
 // --- App lifecycle ---
 app.on('ready', () => {
   initStore();
@@ -746,6 +794,9 @@ app.on('ready', () => {
   if (store.get('settings.iconWindowVisible', true)) {
     createIconWindow();
   }
+
+  checkDeadlinesAndNotify();
+  setInterval(checkDeadlinesAndNotify, 60 * 60 * 1000);
 });
 
 app.on('window-all-closed', (e) => {

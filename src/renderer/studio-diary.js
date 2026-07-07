@@ -53,7 +53,7 @@ Studio.diary = {
 
     this.currentDateId = dateId;
     this.dateInput.value = dateId;
-    this.dateLabel.textContent = this.parseDateId(dateId).toLocaleDateString(undefined, {
+    this.dateLabel.textContent = this.parseDateId(dateId).toLocaleDateString('en-US', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     this.saveStatus.textContent = '';

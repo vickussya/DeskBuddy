@@ -16,6 +16,7 @@
         <button class="nav-btn" data-section="diary">Diary</button>
         <button class="nav-btn" data-section="goals">Goals</button>
         <button class="nav-btn" data-section="inspo">Inspo</button>
+        <button class="nav-btn" data-section="calendar">Calendar</button>
       </div>
       <div id="sidebar-bottom">
         <button class="nav-btn" data-section="settings">Settings</button>
@@ -116,6 +117,20 @@
         </div>
         <div id="inspo-canvas">
           <div id="inspo-canvas-inner"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-calendar">
+        <div id="calendar-header">
+          <button id="btn-calendar-prev" class="icon-action-btn" title="Previous month">‹ Prev</button>
+          <span id="calendar-month-label"></span>
+          <button id="btn-calendar-today" class="icon-action-btn">Today</button>
+          <button id="btn-calendar-next" class="icon-action-btn" title="Next month">Next ›</button>
+        </div>
+        <div id="calendar-grid"></div>
+        <div id="calendar-day-detail">
+          <h3 id="calendar-day-detail-title"></h3>
+          <div id="calendar-day-task-list"></div>
         </div>
       </section>
 
@@ -235,6 +250,7 @@
   <script src="studio-diary.js"></script>
   <script src="studio-goals.js"></script>
   <script src="studio-inspo.js"></script>
+  <script src="studio-calendar.js"></script>
   <script src="studio-settings.js"></script>
   <script src="studio.js"></script>
 </body>

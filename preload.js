@@ -46,6 +46,7 @@ contextBridge.exposeInMainWorld('api', {
   onTasksUpdated: (cb) => ipcRenderer.on('tasks-updated', (_, data) => cb(data)),
   onSettingsUpdated: (cb) => ipcRenderer.on('settings-updated', (_, data) => cb(data)),
   onCharacterChanged: (cb) => ipcRenderer.on('character-changed', (_, char) => cb(char)),
+  onNavigateToSection: (cb) => ipcRenderer.on('navigate-to-section', (_, section) => cb(section)),
 
   removeAllListeners: (channel) => ipcRenderer.removeAllListeners(channel)
 });

@@ -74,8 +74,8 @@ Studio.settings = {
     this.schedule.forEach((entry, i) => {
       const row = document.createElement('div');
       row.className = 'schedule-entry';
-      const fromStr = entry.from ? new Date(entry.from).toLocaleDateString() : '?';
-      const toStr = entry.to ? new Date(entry.to).toLocaleDateString() : '?';
+      const fromStr = entry.from ? new Date(entry.from).toLocaleDateString('en-US') : '?';
+      const toStr = entry.to ? new Date(entry.to).toLocaleDateString('en-US') : '?';
       row.innerHTML = `<span>${fromStr} → ${toStr}: <span class="schedule-entry-char">${entry.character}</span></span>`;
       const btnDel = document.createElement('button');
       btnDel.className = 'btn-del-schedule';

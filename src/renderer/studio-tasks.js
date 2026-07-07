@@ -6,6 +6,13 @@ Studio.tasks = {
   tasksByWorkspace: {},
   checkedByWorkspace: {},
 
+  formatDateId(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
   init(data) {
     this.workspaces = data.workspaces || [];
     this.tasksByWorkspace = data.tasksByWorkspace || {};
@@ -119,9 +126,10 @@ Studio.tasks = {
 
     tasks.forEach((task, i) => {
       const isChecked = checked.includes(task.id);
+      const isOverdue = !isChecked && task.dueDate && task.dueDate <= this.formatDateId(new Date());
 
       const row = document.createElement('div');
-      row.className = 'task-row';
+      row.className = 'task-row' + (isOverdue ? ' task-row-overdue' : '');
 
       const checkbox = document.createElement('div');
       checkbox.className = 'task-checkbox' + (isChecked ? ' checked' : '');
@@ -143,6 +151,16 @@ Studio.tasks = {
       });
       input.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') input.blur();
+      });
+
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.className = 'task-date-input';
+      dateInput.value = task.dueDate || '';
+      dateInput.title = 'Due date';
+      dateInput.addEventListener('change', () => {
+        task.dueDate = dateInput.value || null;
+        this.saveTasks();
       });
 
       const btnUp = document.createElement('button');
@@ -192,6 +210,7 @@ Studio.tasks = {
 
       row.appendChild(checkbox);
       row.appendChild(input);
+      row.appendChild(dateInput);
       row.appendChild(btnUp);
       row.appendChild(btnDown);
       row.appendChild(btnInspo);

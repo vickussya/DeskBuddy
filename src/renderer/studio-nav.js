@@ -17,5 +17,6 @@ Studio.nav = {
     if (section === 'home') Studio.home.refresh();
     if (section === 'tasks') Studio.tasks.refreshActiveWorkspace();
     if (section === 'diary') Studio.diary.loadEntry(Studio.diary.currentDateId);
+    if (section === 'calendar') Studio.calendar.refresh();
   }
 };

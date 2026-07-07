@@ -11,7 +11,10 @@ async function init() {
   Studio.diary.init();
   Studio.goals.init();
   Studio.inspo.init();
+  Studio.calendar.init();
   Studio.settings.init(data);
+
+  window.api.onNavigateToSection((section) => Studio.nav.switchSection(section));
 }
 
 init();

@@ -52,12 +52,16 @@ let userDataPath = null;
 let tasksDir = null;
 let archivedTasksDir = null;
 let diaryDir = null;
+let inspoDir = null;
+let inspoMediaDir = null;
 
 function initStore() {
   userDataPath = app.getPath('userData');
   tasksDir = path.join(userDataPath, 'tasks');
   archivedTasksDir = path.join(tasksDir, '.archived');
   diaryDir = path.join(userDataPath, 'diary');
+  inspoDir = path.join(userDataPath, 'inspo');
+  inspoMediaDir = path.join(inspoDir, 'media');
   const storePath = path.join(userDataPath, 'deskbuddy-config.json');
   store = new JsonStore(storePath, {
     schemaVersion: 1,
@@ -79,10 +83,19 @@ function initStore() {
   });
   if (!fs.existsSync(tasksDir)) fs.mkdirSync(tasksDir, { recursive: true });
   if (!fs.existsSync(diaryDir)) fs.mkdirSync(diaryDir, { recursive: true });
+  if (!fs.existsSync(inspoMediaDir)) fs.mkdirSync(inspoMediaDir, { recursive: true });
 }
 
 function getDiaryFilePath(dateId) {
   return path.join(diaryDir, `${dateId}.txt`);
+}
+
+function getInspoBoardPath() {
+  return path.join(inspoDir, 'board.json');
+}
+
+function uniqueMediaName(ext) {
+  return `${Date.now()}-${Math.round(Math.random() * 1e6)}${ext}`;
 }
 
 // --- Workspace id slugging ---
@@ -522,6 +535,50 @@ ipcMain.handle('get-diary-entry', (_, dateId) => {
 ipcMain.handle('save-diary-entry', (_, dateId, text) => {
   fs.writeFileSync(getDiaryFilePath(dateId), text, 'utf8');
   return true;
+});
+
+ipcMain.handle('get-inspo-board', () => {
+  try {
+    return JSON.parse(fs.readFileSync(getInspoBoardPath(), 'utf8'));
+  } catch {
+    return { items: [], nextZ: 1 };
+  }
+});
+
+ipcMain.handle('save-inspo-board', (_, board) => {
+  fs.writeFileSync(getInspoBoardPath(), JSON.stringify(board, null, 2), 'utf8');
+  return true;
+});
+
+ipcMain.handle('import-inspo-image', (_, srcPath) => {
+  const ext = path.extname(srcPath) || '.png';
+  const destPath = path.join(inspoMediaDir, uniqueMediaName(ext));
+  fs.copyFileSync(srcPath, destPath);
+  return destPath;
+});
+
+ipcMain.handle('pick-inspo-images', async () => {
+  const parent = studioWindow && !studioWindow.isDestroyed() ? studioWindow : undefined;
+  const result = await dialog.showOpenDialog(parent, {
+    title: 'Add Images to Inspo',
+    filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'] }],
+    properties: ['openFile', 'multiSelections']
+  });
+  if (result.canceled) return [];
+  return result.filePaths.map(srcPath => {
+    const ext = path.extname(srcPath) || '.png';
+    const destPath = path.join(inspoMediaDir, uniqueMediaName(ext));
+    fs.copyFileSync(srcPath, destPath);
+    return destPath;
+  });
+});
+
+ipcMain.handle('save-inspo-drawing', (_, dataUrl, existingPath) => {
+  const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
+  const buffer = Buffer.from(base64, 'base64');
+  const destPath = existingPath || path.join(inspoMediaDir, uniqueMediaName('.png'));
+  fs.writeFileSync(destPath, buffer);
+  return destPath;
 });
 
 ipcMain.handle('get-settings', () => {

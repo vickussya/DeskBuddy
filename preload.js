@@ -20,6 +20,12 @@ contextBridge.exposeInMainWorld('api', {
   getGoals: () => ipcRenderer.invoke('get-goals'),
   saveGoals: (goals) => ipcRenderer.invoke('save-goals', goals),
 
+  getInspoBoard: () => ipcRenderer.invoke('get-inspo-board'),
+  saveInspoBoard: (board) => ipcRenderer.invoke('save-inspo-board', board),
+  importInspoImage: (srcPath) => ipcRenderer.invoke('import-inspo-image', srcPath),
+  pickInspoImages: () => ipcRenderer.invoke('pick-inspo-images'),
+  saveInspoDrawing: (dataUrl, existingPath) => ipcRenderer.invoke('save-inspo-drawing', dataUrl, existingPath),
+
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   getSchedule: () => ipcRenderer.invoke('get-schedule'),

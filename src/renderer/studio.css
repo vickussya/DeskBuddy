@@ -449,6 +449,182 @@ h2 {
   accent-color: var(--color-accent-strong);
 }
 
+/* ===== Inspo ===== */
+#panel-inspo.active {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+#inspo-toolbar {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+#inspo-canvas {
+  flex: 1;
+  overflow: auto;
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  position: relative;
+}
+
+#inspo-canvas.drop-active {
+  border-color: var(--color-accent-hover);
+  box-shadow: inset 0 0 0 2px var(--color-accent-hover);
+}
+
+#inspo-canvas-inner {
+  position: relative;
+  width: 3000px;
+  height: 2000px;
+}
+
+.inspo-item {
+  position: absolute;
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  box-shadow: 2px 3px 0 rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.inspo-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
+  background: var(--color-bg-elevated);
+}
+
+.inspo-item canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+  cursor: crosshair;
+  background: white;
+}
+
+.inspo-item-note {
+  display: flex;
+  flex-direction: column;
+  background: #fff6c9;
+}
+
+.inspo-drag-handle {
+  height: 16px;
+  background: rgba(0,0,0,0.06);
+  cursor: grab;
+  flex-shrink: 0;
+}
+
+.inspo-item-note textarea {
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  background: none;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px;
+  color: var(--color-text-primary);
+}
+
+.inspo-item-image,
+.inspo-item-drawing-display {
+  cursor: grab;
+  width: 100%;
+  height: 100%;
+}
+
+.inspo-resize-handle {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--color-border) 50%);
+  z-index: 5;
+}
+
+.inspo-item-delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.9);
+  border: 1px solid var(--color-border-soft);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s;
+  z-index: 6;
+}
+
+.inspo-item:hover .inspo-item-delete {
+  opacity: 1;
+}
+
+.inspo-draw-toolbar {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  background: rgba(255,255,255,0.92);
+  padding: 3px 4px;
+  border-radius: var(--radius-sm);
+  z-index: 6;
+}
+
+.inspo-color-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 1px solid rgba(0,0,0,0.25);
+}
+
+.inspo-color-swatch.selected {
+  outline: 2px solid var(--color-text-primary);
+}
+
+.inspo-brush-btn {
+  font-size: 10px;
+  padding: 1px 4px;
+  cursor: pointer;
+  background: none;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 3px;
+  font-family: inherit;
+}
+
+.inspo-brush-btn.selected {
+  background: var(--color-accent);
+}
+
+.inspo-draw-action-btn {
+  font-size: 10px;
+  padding: 1px 6px;
+  cursor: pointer;
+  border: none;
+  border-radius: 3px;
+  font-family: inherit;
+  background: var(--color-accent-strong);
+  color: white;
+}
+
 /* ===== Diary ===== */
 #diary-header {
   display: flex;

@@ -119,7 +119,11 @@ h2 {
   padding: var(--spacing-md);
 }
 
-.home-card h3 {
+.home-card--calendar {
+  grid-column: 1 / -1;
+}
+
+.home-card > h3 {
   font-size: 13px;
   font-weight: 700;
   color: var(--color-text-primary);
@@ -133,11 +137,12 @@ h2 {
   justify-content: space-between;
 }
 
-.home-card--tasks h3 { background: var(--color-card-tasks); }
-.home-card--goals h3 { background: var(--color-card-goals); }
-.home-card--diary h3 { background: var(--color-card-diary); }
+.home-card--tasks > h3 { background: var(--color-card-tasks); }
+.home-card--goals > h3 { background: var(--color-card-goals); }
+.home-card--diary > h3 { background: var(--color-card-diary); }
+.home-card--calendar > h3 { background: var(--color-card-calendar); }
 
-.home-card h3 .text-btn {
+.home-card > h3 .text-btn {
   color: var(--color-text-primary);
   text-transform: none;
   font-weight: 600;

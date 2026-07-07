@@ -793,7 +793,7 @@ function checkDeadlinesAndNotify() {
   notification.on('click', () => {
     createStudioWindow();
     if (studioWindow && !studioWindow.isDestroyed()) {
-      studioWindow.webContents.send('navigate-to-section', 'calendar');
+      studioWindow.webContents.send('navigate-to-section', 'home');
     }
   });
   notification.show();

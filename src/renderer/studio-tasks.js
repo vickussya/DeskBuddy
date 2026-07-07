@@ -208,9 +208,29 @@ Studio.tasks = {
       btnFolders.title = 'Open Folders for this task';
       btnFolders.addEventListener('click', () => Studio.folders.openForTask(task.id, task.text));
 
+      const stickerBadge = document.createElement('div');
+      stickerBadge.className = 'task-sticker-badge';
+      stickerBadge.title = 'Sticker';
+      const stickerSrc = task.stickerId ? Studio.stickers.getStickerSrc(task.stickerId) : null;
+      if (stickerSrc) {
+        const img = document.createElement('img');
+        img.src = stickerSrc;
+        stickerBadge.appendChild(img);
+      } else {
+        stickerBadge.classList.add('task-sticker-badge-empty');
+        stickerBadge.textContent = '+';
+      }
+      stickerBadge.addEventListener('click', () => {
+        Studio.stickers.openPicker(stickerBadge, (stickerId) => {
+          task.stickerId = stickerId;
+          this.saveTasks();
+        });
+      });
+
       row.appendChild(checkbox);
       row.appendChild(input);
       row.appendChild(dateInput);
+      row.appendChild(stickerBadge);
       row.appendChild(btnUp);
       row.appendChild(btnDown);
       row.appendChild(btnInspo);

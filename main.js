@@ -596,6 +596,26 @@ ipcMain.handle('save-diary-entry', (_, dateId, text) => {
   return true;
 });
 
+ipcMain.handle('get-diary-stickers', (_, dateId) => {
+  return store.get(`diaryStickers.${dateId}`, []);
+});
+
+ipcMain.handle('save-diary-stickers', (_, dateId, stickers) => {
+  store.set(`diaryStickers.${dateId}`, stickers);
+  return true;
+});
+
+ipcMain.handle('get-sticker-catalog', () => {
+  const stickersDir = path.join(__dirname, 'src', 'assets', 'stickers');
+  try {
+    return fs.readdirSync(stickersDir)
+      .filter(f => /\.(png|jpg|jpeg|webp|gif|svg)$/i.test(f))
+      .map(f => ({ id: path.parse(f).name, path: path.join(stickersDir, f) }));
+  } catch {
+    return [];
+  }
+});
+
 ipcMain.handle('get-inspo-board', (_, boardId) => {
   try {
     return JSON.parse(fs.readFileSync(getInspoBoardPath(boardId), 'utf8'));

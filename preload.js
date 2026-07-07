@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('api', {
 
   getDiaryEntry: (dateId) => ipcRenderer.invoke('get-diary-entry', dateId),
   saveDiaryEntry: (dateId, text) => ipcRenderer.invoke('save-diary-entry', dateId, text),
+  getDiaryStickers: (dateId) => ipcRenderer.invoke('get-diary-stickers', dateId),
+  saveDiaryStickers: (dateId, stickers) => ipcRenderer.invoke('save-diary-stickers', dateId, stickers),
+  getStickerCatalog: () => ipcRenderer.invoke('get-sticker-catalog'),
 
   getGoals: () => ipcRenderer.invoke('get-goals'),
   saveGoals: (goals) => ipcRenderer.invoke('save-goals', goals),

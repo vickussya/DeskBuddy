@@ -5,6 +5,7 @@ async function init() {
   document.documentElement.dataset.theme = data.settings.theme || 'vivid';
 
   Studio.nav.init();
+  await Studio.stickers.init();
   Studio.tasks.init(data);
   Studio.folders.init();
   Studio.home.init();

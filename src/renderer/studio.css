@@ -1119,9 +1119,13 @@ h2 {
   color: var(--color-text-secondary);
 }
 
+#diary-surface {
+  position: relative;
+  max-width: 1100px;
+}
+
 #diary-textarea {
   width: 100%;
-  max-width: 1100px;
   min-height: 50vh;
   resize: vertical;
   background: var(--color-bg-elevated);
@@ -1138,6 +1142,151 @@ h2 {
 #diary-textarea:focus {
   border-color: var(--color-accent-strong);
   background: var(--color-accent);
+}
+
+/* ===== Diary stickers ===== */
+#diary-sticker-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.diary-sticker-item {
+  position: absolute;
+  pointer-events: auto;
+  cursor: grab;
+}
+
+.diary-sticker-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.diary-sticker-resize-handle,
+.diary-sticker-rotate-handle,
+.diary-sticker-delete {
+  opacity: 0;
+  transition: opacity 0.12s;
+}
+
+.diary-sticker-item:hover .diary-sticker-resize-handle,
+.diary-sticker-item:hover .diary-sticker-rotate-handle,
+.diary-sticker-item:hover .diary-sticker-delete {
+  opacity: 1;
+}
+
+.diary-sticker-resize-handle {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  border: 2px solid white;
+  cursor: nwse-resize;
+}
+
+.diary-sticker-rotate-handle {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-accent-strong);
+  border: 2px solid white;
+  cursor: grab;
+}
+
+.diary-sticker-delete {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid var(--color-border-soft);
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+/* ===== Sticker picker popup (Diary + Tasks) ===== */
+.sticker-picker-popup {
+  position: fixed;
+  z-index: 200;
+  background: var(--color-bg-elevated);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+  padding: 8px;
+  max-width: 220px;
+}
+
+.sticker-picker-none {
+  width: 100%;
+  margin-bottom: 6px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.sticker-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+.sticker-picker-thumb {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  transition: background 0.12s;
+}
+
+.sticker-picker-thumb:hover {
+  background: var(--color-accent);
+}
+
+/* ===== Task sticker badge ===== */
+.task-sticker-badge {
+  width: 22px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--color-border-soft);
+  cursor: pointer;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.task-sticker-badge img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.task-sticker-badge-empty {
+  color: var(--color-text-muted);
+  font-size: 12px;
 }
 
 /* ===== Settings ===== */

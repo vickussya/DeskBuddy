@@ -95,10 +95,14 @@
           <input type="date" id="diary-date-input" />
           <button id="btn-diary-today" class="icon-action-btn">Today</button>
           <button id="btn-diary-next" class="icon-action-btn" title="Next day">Next ›</button>
+          <button id="btn-diary-add-sticker" class="icon-action-btn">+ Sticker</button>
           <span id="diary-date-label"></span>
           <span id="diary-save-status" class="hint-text"></span>
         </div>
-        <textarea id="diary-textarea" placeholder="Write about your day..."></textarea>
+        <div id="diary-surface">
+          <textarea id="diary-textarea" placeholder="Write about your day..."></textarea>
+          <div id="diary-sticker-layer"></div>
+        </div>
       </section>
 
       <section class="panel" id="panel-goals">
@@ -244,6 +248,7 @@
   </div>
 
   <script src="studio-nav.js"></script>
+  <script src="studio-stickers.js"></script>
   <script src="studio-tasks.js"></script>
   <script src="studio-folders.js"></script>
   <script src="studio-home.js"></script>

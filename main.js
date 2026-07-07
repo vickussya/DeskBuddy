@@ -75,7 +75,7 @@ function initStore() {
       customCharacterPath: null,
       iconWindowVisible: true,
       iconWindowPosition: { x: null, y: null },
-      theme: 'cozy'
+      theme: 'vivid'
     },
     schedule: [],
     studioWindowBounds: null,
@@ -424,7 +424,7 @@ function setupIPC() {
 ipcMain.handle('get-icon-init-data', () => {
   return {
     character: getActiveCharacter(),
-    theme: store.get('settings.theme', 'cozy')
+    theme: store.get('settings.theme', 'vivid')
   };
 });
 

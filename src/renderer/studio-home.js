@@ -106,19 +106,20 @@ Studio.home = {
       row.className = 'home-goal-row';
       row.addEventListener('click', () => Studio.nav.switchSection('goals'));
 
+      const ring = document.createElement('div');
+      ring.className = 'progress-ring progress-ring--sm';
+      ring.style.setProperty('--pct', progress);
+      const ringLabel = document.createElement('span');
+      ringLabel.className = 'progress-ring-label';
+      ringLabel.textContent = `${progress}%`;
+      ring.appendChild(ringLabel);
+
       const title = document.createElement('div');
       title.className = 'home-goal-title';
-      title.textContent = `${goal.title} — ${progress}%`;
+      title.textContent = goal.title;
 
-      const track = document.createElement('div');
-      track.className = 'goal-progress-track';
-      const fill = document.createElement('div');
-      fill.className = 'goal-progress-fill';
-      fill.style.width = `${progress}%`;
-      track.appendChild(fill);
-
+      row.appendChild(ring);
       row.appendChild(title);
-      row.appendChild(track);
       list.appendChild(row);
     });
   },

@@ -1,22 +1,29 @@
 /* ===== Theme tokens =====
-   Swapped per [data-theme] on <html>. Only "cozy" exists today;
+   Swapped per [data-theme] on <html>. Only "vivid" exists today;
    future themes (e.g. a retro Windows-98 skin) add another block here
    without touching component CSS. */
 
 :root,
-:root[data-theme="cozy"] {
-  --color-bg-primary: #fdf6ec;
-  --color-bg-secondary: #f0e4cc;
-  --color-bg-elevated: #fffaf0;
-  --color-border: #c9a96e;
-  --color-border-soft: #e8d4b0;
-  --color-accent: #e8c98a;
-  --color-accent-strong: #c9a96e;
-  --color-accent-hover: #a07840;
-  --color-text-primary: #4a3728;
-  --color-text-secondary: #8b6340;
-  --color-text-muted: #a07840;
-  --color-danger: #b5533c;
+:root[data-theme="vivid"] {
+  --color-bg-primary: #fff4ef;
+  --color-bg-elevated: #ffffff;
+  --color-sidebar-bg: #3d1f38;
+  --color-sidebar-text: #f5e6f0;
+  --color-sidebar-text-muted: #c9a0c0;
+  --color-border: #f0c9d0;
+  --color-border-soft: #f7e3e6;
+  --color-accent: #ffb3c1;
+  --color-accent-strong: #ff5d82;
+  --color-accent-hover: #e8386a;
+  --color-text-primary: #2d1b28;
+  --color-text-secondary: #7a4f6e;
+  --color-text-muted: #a37d95;
+  --color-danger: #e63950;
+
+  /* per-section color blocks (Home cards) */
+  --color-card-tasks: #ffd166;
+  --color-card-goals: #a8e6cf;
+  --color-card-diary: #c3b8ff;
 
   --font-family-base: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif;
 

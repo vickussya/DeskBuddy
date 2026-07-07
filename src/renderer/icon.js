@@ -25,7 +25,7 @@ async function loadCharacterImage(character) {
 
 async function init() {
   const data = await window.api.getIconInitData();
-  document.documentElement.dataset.theme = data.theme || 'cozy';
+  document.documentElement.dataset.theme = data.theme || 'vivid';
   await loadCharacterImage(data.character || 'cat');
 
   characterImg.addEventListener('click', () => window.api.openStudio());

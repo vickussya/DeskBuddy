@@ -1,8 +1,8 @@
 async function init() {
-  document.documentElement.dataset.theme = 'cozy';
+  document.documentElement.dataset.theme = 'vivid';
 
   const data = await window.api.getStudioInitData();
-  document.documentElement.dataset.theme = data.settings.theme || 'cozy';
+  document.documentElement.dataset.theme = data.settings.theme || 'vivid';
 
   Studio.nav.init();
   Studio.tasks.init(data);

@@ -100,9 +100,17 @@ Studio.goals = {
       const card = document.createElement('div');
       card.className = 'goal-card';
 
-      // Header: title + progress % + delete
+      // Header: ring + title + delete
       const header = document.createElement('div');
       header.className = 'goal-card-header';
+
+      const ring = document.createElement('div');
+      ring.className = 'progress-ring';
+      ring.style.setProperty('--pct', progress);
+      const ringLabel = document.createElement('span');
+      ringLabel.className = 'progress-ring-label';
+      ringLabel.textContent = `${progress}%`;
+      ring.appendChild(ringLabel);
 
       const titleInput = document.createElement('input');
       titleInput.type = 'text';
@@ -112,30 +120,17 @@ Studio.goals = {
       titleInput.addEventListener('blur', () => this.renameGoal(goal.id, titleInput.value));
       titleInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') titleInput.blur(); });
 
-      const pct = document.createElement('span');
-      pct.className = 'goal-progress-pct';
-      pct.textContent = `${progress}%`;
-
       const btnDel = document.createElement('button');
       btnDel.className = 'task-btn';
       btnDel.textContent = '✕';
       btnDel.title = 'Delete goal';
       btnDel.addEventListener('click', () => this.deleteGoal(goal.id));
 
+      header.appendChild(ring);
       header.appendChild(titleInput);
-      header.appendChild(pct);
       header.appendChild(btnDel);
 
-      // Progress bar
-      const track = document.createElement('div');
-      track.className = 'goal-progress-track';
-      const fill = document.createElement('div');
-      fill.className = 'goal-progress-fill';
-      fill.style.width = `${progress}%`;
-      track.appendChild(fill);
-
       card.appendChild(header);
-      card.appendChild(track);
 
       if (goal.milestones.length > 0) {
         goal.milestones.forEach(m => {

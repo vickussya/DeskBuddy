@@ -1,3 +1,23 @@
+/* ===== Fonts (bundled locally — CSP blocks external font fetches) ===== */
+@font-face {
+  font-family: 'Urbanist';
+  font-style: normal;
+  font-weight: 400;
+  src: url('../assets/fonts/urbanist-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Urbanist';
+  font-style: normal;
+  font-weight: 500;
+  src: url('../assets/fonts/urbanist-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Urbanist';
+  font-style: normal;
+  font-weight: 600;
+  src: url('../assets/fonts/urbanist-latin-600-normal.woff2') format('woff2');
+}
+
 /* ===== Theme tokens =====
    Swapped per [data-theme] on <html>. Only "vivid" exists today;
    future themes (e.g. a retro Windows-98 skin) add another block here
@@ -7,17 +27,17 @@
 :root[data-theme="vivid"] {
   --color-bg-primary: #fff4ef;
   --color-bg-elevated: #ffffff;
-  --color-sidebar-bg: #3d1f38;
-  --color-sidebar-text: #f5e6f0;
-  --color-sidebar-text-muted: #c9a0c0;
-  --color-border: #f0c9d0;
-  --color-border-soft: #f7e3e6;
-  --color-accent: #ffb3c1;
-  --color-accent-strong: #ff5d82;
-  --color-accent-hover: #e8386a;
-  --color-text-primary: #2d1b28;
-  --color-text-secondary: #7a4f6e;
-  --color-text-muted: #a37d95;
+  --color-sidebar-bg: #202020;
+  --color-sidebar-text: #ffffff;
+  --color-sidebar-text-muted: #a8a8a8;
+  --color-border: #f0b8d3;
+  --color-border-soft: #f9e6f0;
+  --color-accent: #f4d4e6;
+  --color-accent-strong: #cc498f;
+  --color-accent-hover: #a83a72;
+  --color-text-primary: #202020;
+  --color-text-secondary: #6b5560;
+  --color-text-muted: #9c8a94;
   --color-danger: #e63950;
 
   /* per-section color blocks (Home cards) */
@@ -25,11 +45,12 @@
   --color-card-goals: #a8e6cf;
   --color-card-diary: #c3b8ff;
 
-  --font-family-base: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif;
+  --font-family-base: 'Urbanist', 'Segoe UI', sans-serif;
 
   --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 16px;
+  --radius-pill: 999px;
 
   --spacing-xs: 4px;
   --spacing-sm: 8px;

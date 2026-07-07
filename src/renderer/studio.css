@@ -39,20 +39,17 @@ html, body {
 .nav-btn {
   display: flex;
   align-items: center;
-  gap: 10px;
   background: none;
   border: none;
   text-align: left;
-  padding: 10px var(--spacing-md);
-  font-size: 14px;
+  padding: 13px var(--spacing-md);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   font-family: inherit;
   color: var(--color-sidebar-text-muted);
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
-}
-
-.nav-icon {
-  font-size: 16px;
 }
 
 .nav-btn:hover {
@@ -233,8 +230,8 @@ h2 {
 .workspace-tab {
   background: var(--color-bg-elevated);
   border: 1.5px solid var(--color-border-soft);
-  border-radius: var(--radius-md);
-  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
   font-size: 13px;
   font-family: inherit;
   color: var(--color-text-secondary);
@@ -256,8 +253,8 @@ h2 {
 .icon-action-btn {
   background: var(--color-bg-elevated);
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
   font-size: 13px;
   font-family: inherit;
   color: var(--color-text-secondary);
@@ -305,8 +302,8 @@ h2 {
 #new-task-input:focus,
 #new-workspace-input:focus,
 #rename-workspace-input:focus {
-  border-color: var(--color-accent-hover);
-  box-shadow: 0 0 0 2px rgba(201,169,110,0.2);
+  border-color: var(--color-accent-strong);
+  background: var(--color-accent);
 }
 
 #btn-add-task,
@@ -314,8 +311,8 @@ h2 {
 #btn-confirm-rename-workspace {
   background: var(--color-accent-strong);
   border: none;
-  border-radius: var(--radius-md);
-  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  padding: 7px 18px;
   color: white;
   font-size: 13px;
   font-weight: 600;
@@ -334,7 +331,7 @@ h2 {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: 640px;
+  max-width: 900px;
 }
 
 .task-row {
@@ -438,14 +435,49 @@ h2 {
   display: flex;
   gap: 8px;
   margin-bottom: var(--spacing-md);
-  max-width: 640px;
+  max-width: 900px;
+}
+
+#new-goal-input {
+  flex: 1;
+  max-width: 360px;
+  background: var(--color-bg-elevated);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+  outline: none;
+}
+
+#new-goal-input:focus {
+  border-color: var(--color-accent-strong);
+  background: var(--color-accent);
+}
+
+#btn-add-goal {
+  background: var(--color-accent-strong);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 7px 18px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+#btn-add-goal:hover {
+  background: var(--color-accent-hover);
 }
 
 #goals-list {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  max-width: 640px;
+  max-width: 900px;
 }
 
 .goal-card {
@@ -849,7 +881,7 @@ h2 {
 
 #diary-textarea {
   width: 100%;
-  max-width: 800px;
+  max-width: 1100px;
   min-height: 50vh;
   resize: vertical;
   background: var(--color-bg-elevated);
@@ -864,14 +896,14 @@ h2 {
 }
 
 #diary-textarea:focus {
-  border-color: var(--color-accent-hover);
-  box-shadow: 0 0 0 2px rgba(201,169,110,0.2);
+  border-color: var(--color-accent-strong);
+  background: var(--color-accent);
 }
 
 /* ===== Settings ===== */
 .settings-block {
   margin-bottom: var(--spacing-lg);
-  max-width: 560px;
+  max-width: 720px;
 }
 
 .section-label {
@@ -954,8 +986,8 @@ h2 {
 .action-btn {
   background: var(--color-bg-elevated);
   border: 1.5px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
   font-size: 12px;
   font-family: inherit;
   color: var(--color-text-secondary);

@@ -42,7 +42,7 @@ html, body {
   box-shadow:
     0 4px 16px rgba(0,0,0,0.22),
     0 0 0 3px var(--color-accent-strong),
-    0 0 0 6px rgba(201,169,110,0.28);
+    0 0 0 6px rgba(204,73,143,0.28);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   image-rendering: pixelated;
 }
@@ -52,5 +52,5 @@ html, body {
   box-shadow:
     0 6px 20px rgba(0,0,0,0.28),
     0 0 0 3px var(--color-accent-hover),
-    0 0 0 6px rgba(201,169,110,0.4);
+    0 0 0 6px rgba(204,73,143,0.4);
 }

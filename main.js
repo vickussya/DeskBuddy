@@ -355,6 +355,7 @@ function createStudioWindow() {
 
   studioWindow.setMenu(null);
   studioWindow.loadFile(path.join(__dirname, 'src', 'renderer', 'studio.html'));
+  studioWindow.maximize();
 
   const persistBounds = () => {
     if (!studioWindow || studioWindow.isDestroyed()) return;

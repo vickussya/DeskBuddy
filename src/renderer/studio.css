@@ -324,6 +324,52 @@ h2 {
   color: var(--color-danger);
 }
 
+/* ===== Diary ===== */
+#diary-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+#diary-date-input {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+#diary-date-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+#diary-textarea {
+  width: 100%;
+  max-width: 800px;
+  min-height: 50vh;
+  resize: vertical;
+  background: var(--color-bg-elevated);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  font-family: var(--font-family-base);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+#diary-textarea:focus {
+  border-color: var(--color-accent-hover);
+  box-shadow: 0 0 0 2px rgba(201,169,110,0.2);
+}
+
 /* ===== Settings ===== */
 .settings-block {
   margin-bottom: var(--spacing-lg);

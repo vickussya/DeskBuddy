@@ -14,6 +14,9 @@ contextBridge.exposeInMainWorld('api', {
   setChecked: (workspaceId, checkedIds) => ipcRenderer.invoke('set-checked', workspaceId, checkedIds),
   openTasksFile: (workspaceId) => ipcRenderer.invoke('open-tasks-file', workspaceId),
 
+  getDiaryEntry: (dateId) => ipcRenderer.invoke('get-diary-entry', dateId),
+  saveDiaryEntry: (dateId, text) => ipcRenderer.invoke('save-diary-entry', dateId, text),
+
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   getSchedule: () => ipcRenderer.invoke('get-schedule'),

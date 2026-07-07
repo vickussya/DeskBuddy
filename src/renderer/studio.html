@@ -64,10 +64,15 @@
       </section>
 
       <section class="panel" id="panel-diary">
-        <div class="placeholder">
-          <h2>Diary</h2>
-          <p>Coming soon — your daily journal.</p>
+        <div id="diary-header">
+          <button id="btn-diary-prev" class="icon-action-btn" title="Previous day">‹ Prev</button>
+          <input type="date" id="diary-date-input" />
+          <button id="btn-diary-today" class="icon-action-btn">Today</button>
+          <button id="btn-diary-next" class="icon-action-btn" title="Next day">Next ›</button>
+          <span id="diary-date-label"></span>
+          <span id="diary-save-status" class="hint-text"></span>
         </div>
+        <textarea id="diary-textarea" placeholder="Write about your day..."></textarea>
       </section>
 
       <section class="panel" id="panel-goals">
@@ -164,6 +169,7 @@
 
   <script src="studio-nav.js"></script>
   <script src="studio-tasks.js"></script>
+  <script src="studio-diary.js"></script>
   <script src="studio-settings.js"></script>
   <script src="studio.js"></script>
 </body>

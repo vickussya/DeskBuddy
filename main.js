@@ -51,11 +51,13 @@ let store = null;
 let userDataPath = null;
 let tasksDir = null;
 let archivedTasksDir = null;
+let diaryDir = null;
 
 function initStore() {
   userDataPath = app.getPath('userData');
   tasksDir = path.join(userDataPath, 'tasks');
   archivedTasksDir = path.join(tasksDir, '.archived');
+  diaryDir = path.join(userDataPath, 'diary');
   const storePath = path.join(userDataPath, 'deskbuddy-config.json');
   store = new JsonStore(storePath, {
     schemaVersion: 1,
@@ -75,6 +77,11 @@ function initStore() {
     studioWindowBounds: null
   });
   if (!fs.existsSync(tasksDir)) fs.mkdirSync(tasksDir, { recursive: true });
+  if (!fs.existsSync(diaryDir)) fs.mkdirSync(diaryDir, { recursive: true });
+}
+
+function getDiaryFilePath(dateId) {
+  return path.join(diaryDir, `${dateId}.txt`);
 }
 
 // --- Workspace id slugging ---
@@ -491,6 +498,19 @@ ipcMain.handle('set-checked', (_, workspaceId, checkedIds) => {
 
 ipcMain.handle('open-tasks-file', (_, workspaceId) => {
   shell.openPath(getTasksFilePath(workspaceId));
+  return true;
+});
+
+ipcMain.handle('get-diary-entry', (_, dateId) => {
+  try {
+    return fs.readFileSync(getDiaryFilePath(dateId), 'utf8');
+  } catch {
+    return '';
+  }
+});
+
+ipcMain.handle('save-diary-entry', (_, dateId, text) => {
+  fs.writeFileSync(getDiaryFilePath(dateId), text, 'utf8');
   return true;
 });
 

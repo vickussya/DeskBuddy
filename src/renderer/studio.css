@@ -106,6 +106,99 @@ h2 {
   margin-bottom: var(--spacing-md);
 }
 
+/* ===== Home ===== */
+#home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.home-card {
+  background: var(--color-bg-elevated);
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+}
+
+.home-card h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#home-task-list,
+#home-goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.home-task-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+}
+
+.home-task-workspace-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.home-task-text {
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-goal-row {
+  cursor: pointer;
+  padding: 4px 0;
+}
+
+.home-goal-title {
+  font-size: 12.5px;
+  color: var(--color-text-primary);
+  margin-bottom: 4px;
+}
+
+#home-diary-textarea {
+  width: 100%;
+  min-height: 120px;
+  resize: vertical;
+  background: var(--color-bg-primary);
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm);
+  font-family: var(--font-family-base);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+#home-diary-textarea:focus {
+  border-color: var(--color-accent-hover);
+}
+
 /* ===== Tasks section ===== */
 #tasks-header {
   display: flex;

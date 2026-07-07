@@ -25,9 +25,19 @@
     <main id="content">
 
       <section class="panel active" id="panel-home">
-        <div class="placeholder">
-          <h2>Home</h2>
-          <p>Your combined dashboard is coming soon — one place pulling together tasks, diary, goals, and inspiration.</p>
+        <div id="home-grid">
+          <div class="home-card">
+            <h3>Open Tasks</h3>
+            <div id="home-task-list"></div>
+          </div>
+          <div class="home-card">
+            <h3>Goals</h3>
+            <div id="home-goals-list"></div>
+          </div>
+          <div class="home-card">
+            <h3>Today's Diary <button id="btn-home-open-diary" class="text-btn">Open full entry</button></h3>
+            <textarea id="home-diary-textarea" placeholder="Write about your day..."></textarea>
+          </div>
         </div>
       </section>
 
@@ -191,6 +201,7 @@
 
   <script src="studio-nav.js"></script>
   <script src="studio-tasks.js"></script>
+  <script src="studio-home.js"></script>
   <script src="studio-diary.js"></script>
   <script src="studio-goals.js"></script>
   <script src="studio-inspo.js"></script>

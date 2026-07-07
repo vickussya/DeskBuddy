@@ -1,0 +1,138 @@
+window.Studio = window.Studio || {};
+
+Studio.home = {
+  goals: [],
+  diaryDateId: null,
+  diaryText: '',
+  diarySaveTimer: null,
+
+  init() {
+    document.getElementById('btn-home-open-diary').addEventListener('click', () => Studio.nav.switchSection('diary'));
+
+    const textarea = document.getElementById('home-diary-textarea');
+    textarea.addEventListener('input', () => this.scheduleDiarySave());
+    textarea.addEventListener('blur', () => this.flushDiarySave());
+
+    this.refresh();
+  },
+
+  formatDateId(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  },
+
+  async refresh() {
+    this.renderTasks();
+
+    this.goals = await window.api.getGoals();
+    this.renderGoals();
+
+    this.diaryDateId = this.formatDateId(new Date());
+    this.diaryText = await window.api.getDiaryEntry(this.diaryDateId);
+    document.getElementById('home-diary-textarea').value = this.diaryText;
+  },
+
+  renderTasks() {
+    const list = document.getElementById('home-task-list');
+    list.innerHTML = '';
+
+    const workspaces = Studio.tasks.workspaces || [];
+    const rows = [];
+    workspaces.forEach(ws => {
+      const tasks = Studio.tasks.tasksByWorkspace[ws.id] || [];
+      const checked = Studio.tasks.checkedByWorkspace[ws.id] || [];
+      tasks.forEach(task => {
+        if (!checked.includes(task.id)) rows.push({ ws, task });
+      });
+    });
+
+    if (rows.length === 0) {
+      const el = document.createElement('div');
+      el.className = 'no-tasks';
+      el.textContent = 'Nothing open — nice work.';
+      list.appendChild(el);
+      return;
+    }
+
+    rows.forEach(({ ws, task }) => {
+      const row = document.createElement('div');
+      row.className = 'home-task-row';
+
+      const checkbox = document.createElement('div');
+      checkbox.className = 'task-checkbox';
+      checkbox.addEventListener('click', () => this.toggleTask(ws.id, task.id));
+
+      const tag = document.createElement('span');
+      tag.className = 'home-task-workspace-tag';
+      tag.textContent = ws.name;
+
+      const text = document.createElement('span');
+      text.className = 'home-task-text';
+      text.textContent = task.text;
+
+      row.appendChild(checkbox);
+      row.appendChild(tag);
+      row.appendChild(text);
+      list.appendChild(row);
+    });
+  },
+
+  async toggleTask(workspaceId, taskId) {
+    const checked = Studio.tasks.checkedByWorkspace[workspaceId] || [];
+    const updated = checked.includes(taskId) ? checked.filter(id => id !== taskId) : [...checked, taskId];
+    Studio.tasks.checkedByWorkspace[workspaceId] = updated;
+    await window.api.setChecked(workspaceId, updated);
+    this.renderTasks();
+  },
+
+  renderGoals() {
+    const list = document.getElementById('home-goals-list');
+    list.innerHTML = '';
+
+    if (this.goals.length === 0) {
+      const el = document.createElement('div');
+      el.className = 'no-tasks';
+      el.textContent = 'No goals yet.';
+      list.appendChild(el);
+      return;
+    }
+
+    this.goals.forEach(goal => {
+      const progress = Studio.goals.computeProgress(goal);
+
+      const row = document.createElement('div');
+      row.className = 'home-goal-row';
+      row.addEventListener('click', () => Studio.nav.switchSection('goals'));
+
+      const title = document.createElement('div');
+      title.className = 'home-goal-title';
+      title.textContent = `${goal.title} — ${progress}%`;
+
+      const track = document.createElement('div');
+      track.className = 'goal-progress-track';
+      const fill = document.createElement('div');
+      fill.className = 'goal-progress-fill';
+      fill.style.width = `${progress}%`;
+      track.appendChild(fill);
+
+      row.appendChild(title);
+      row.appendChild(track);
+      list.appendChild(row);
+    });
+  },
+
+  scheduleDiarySave() {
+    clearTimeout(this.diarySaveTimer);
+    this.diarySaveTimer = setTimeout(() => this.flushDiarySave(), 600);
+  },
+
+  async flushDiarySave() {
+    clearTimeout(this.diarySaveTimer);
+    const text = document.getElementById('home-diary-textarea').value;
+    if (text === this.diaryText) return;
+    this.diaryText = text;
+    await window.api.saveDiaryEntry(this.diaryDateId, text);
+  }
+};

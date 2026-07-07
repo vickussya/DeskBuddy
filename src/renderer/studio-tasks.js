@@ -78,6 +78,14 @@ Studio.tasks = {
     });
   },
 
+  async refreshActiveWorkspace() {
+    if (!this.activeWorkspaceId) return;
+    const { tasks, checkedTasks } = await window.api.getTasks(this.activeWorkspaceId);
+    this.tasksByWorkspace[this.activeWorkspaceId] = tasks;
+    this.checkedByWorkspace[this.activeWorkspaceId] = checkedTasks;
+    this.renderTaskList();
+  },
+
   switchWorkspace(id) {
     if (id === this.activeWorkspaceId) return;
     this.activeWorkspaceId = id;

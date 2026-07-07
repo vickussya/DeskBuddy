@@ -42,34 +42,49 @@
       </section>
 
       <section class="panel" id="panel-tasks">
-        <div id="tasks-header">
-          <div id="workspace-tabs"></div>
-          <button id="btn-add-workspace" class="icon-action-btn" title="Add workspace">+ Workspace</button>
+        <div id="tasks-subnav">
+          <button class="tasks-subnav-btn active" data-subview="tasks">Tasks</button>
+          <button class="tasks-subnav-btn" data-subview="shortcuts">Shortcuts</button>
         </div>
 
-        <div id="workspace-add-form" class="hidden">
-          <input type="text" id="new-workspace-input" placeholder="Workspace name..." maxlength="40" />
-          <button id="btn-confirm-add-workspace">Create</button>
-          <button id="btn-cancel-add-workspace" class="text-btn">Cancel</button>
+        <div id="tasks-subview-tasks" class="tasks-subview active">
+          <div id="tasks-header">
+            <div id="workspace-tabs"></div>
+            <button id="btn-add-workspace" class="icon-action-btn" title="Add workspace">+ Workspace</button>
+          </div>
+
+          <div id="workspace-add-form" class="hidden">
+            <input type="text" id="new-workspace-input" placeholder="Workspace name..." maxlength="40" />
+            <button id="btn-confirm-add-workspace">Create</button>
+            <button id="btn-cancel-add-workspace" class="text-btn">Cancel</button>
+          </div>
+
+          <div id="task-add-row">
+            <input type="text" id="new-task-input" placeholder="Add a task..." maxlength="140" />
+            <button id="btn-add-task">Add</button>
+          </div>
+
+          <div id="task-list"></div>
+
+          <div id="workspace-tools">
+            <button id="btn-open-tasks-file" class="text-btn">Open tasks file</button>
+            <button id="btn-rename-workspace" class="text-btn">Rename workspace</button>
+            <button id="btn-delete-workspace" class="text-btn danger">Delete workspace</button>
+          </div>
+
+          <div id="workspace-rename-form" class="hidden">
+            <input type="text" id="rename-workspace-input" maxlength="40" />
+            <button id="btn-confirm-rename-workspace">Save</button>
+            <button id="btn-cancel-rename-workspace" class="text-btn">Cancel</button>
+          </div>
         </div>
 
-        <div id="task-add-row">
-          <input type="text" id="new-task-input" placeholder="Add a task..." maxlength="140" />
-          <button id="btn-add-task">Add</button>
-        </div>
-
-        <div id="task-list"></div>
-
-        <div id="workspace-tools">
-          <button id="btn-open-tasks-file" class="text-btn">Open tasks file</button>
-          <button id="btn-rename-workspace" class="text-btn">Rename workspace</button>
-          <button id="btn-delete-workspace" class="text-btn danger">Delete workspace</button>
-        </div>
-
-        <div id="workspace-rename-form" class="hidden">
-          <input type="text" id="rename-workspace-input" maxlength="40" />
-          <button id="btn-confirm-rename-workspace">Save</button>
-          <button id="btn-cancel-rename-workspace" class="text-btn">Cancel</button>
+        <div id="tasks-subview-shortcuts" class="tasks-subview">
+          <div id="shortcuts-toolbar">
+            <button id="btn-add-root-folder" class="icon-action-btn">+ Folder</button>
+            <button id="btn-add-root-shortcut" class="icon-action-btn">+ Shortcut</button>
+          </div>
+          <div id="folders-tree"></div>
         </div>
       </section>
 
@@ -201,6 +216,7 @@
 
   <script src="studio-nav.js"></script>
   <script src="studio-tasks.js"></script>
+  <script src="studio-folders.js"></script>
   <script src="studio-home.js"></script>
   <script src="studio-diary.js"></script>
   <script src="studio-goals.js"></script>

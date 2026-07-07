@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld('api', {
   getGoals: () => ipcRenderer.invoke('get-goals'),
   saveGoals: (goals) => ipcRenderer.invoke('save-goals', goals),
 
+  getFoldersShortcuts: () => ipcRenderer.invoke('get-folders-shortcuts'),
+  saveFoldersShortcuts: (data) => ipcRenderer.invoke('save-folders-shortcuts', data),
+  pickShortcutTarget: () => ipcRenderer.invoke('pick-shortcut-target'),
+  openShortcutTarget: (targetPath) => ipcRenderer.invoke('open-shortcut-target', targetPath),
+
   getInspoBoard: (boardId) => ipcRenderer.invoke('get-inspo-board', boardId),
   saveInspoBoard: (boardId, board) => ipcRenderer.invoke('save-inspo-board', boardId, board),
   importInspoImage: (boardId, srcPath) => ipcRenderer.invoke('import-inspo-image', boardId, srcPath),

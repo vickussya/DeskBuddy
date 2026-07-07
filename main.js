@@ -538,6 +538,40 @@ ipcMain.handle('save-goals', (_, goals) => {
   return true;
 });
 
+ipcMain.handle('get-folders-shortcuts', () => {
+  return {
+    folders: store.get('folders', []),
+    shortcuts: store.get('shortcuts', [])
+  };
+});
+
+ipcMain.handle('save-folders-shortcuts', (_, data) => {
+  store.set('folders', data.folders);
+  store.set('shortcuts', data.shortcuts);
+  return true;
+});
+
+ipcMain.handle('pick-shortcut-target', async () => {
+  const parent = studioWindow && !studioWindow.isDestroyed() ? studioWindow : undefined;
+  const result = await dialog.showOpenDialog(parent, {
+    title: 'Add Shortcut',
+    properties: ['openFile', 'openDirectory']
+  });
+  if (result.canceled || result.filePaths.length === 0) return null;
+  const targetPath = result.filePaths[0];
+  const isDirectory = fs.statSync(targetPath).isDirectory();
+  return {
+    path: targetPath,
+    name: path.basename(targetPath),
+    type: isDirectory ? 'folder' : 'file'
+  };
+});
+
+ipcMain.handle('open-shortcut-target', (_, targetPath) => {
+  shell.openPath(targetPath);
+  return true;
+});
+
 ipcMain.handle('get-diary-entry', (_, dateId) => {
   try {
     return fs.readFileSync(getDiaryFilePath(dateId), 'utf8');

@@ -212,6 +212,122 @@ h2 {
   border-color: var(--color-accent-hover);
 }
 
+/* ===== Tasks / Shortcuts subnav ===== */
+#tasks-subnav {
+  display: flex;
+  gap: 6px;
+  margin-bottom: var(--spacing-md);
+}
+
+.tasks-subnav-btn {
+  background: var(--color-bg-elevated);
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-pill);
+  padding: 6px 16px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.tasks-subnav-btn:hover {
+  border-color: var(--color-border);
+}
+
+.tasks-subnav-btn.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent-strong);
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
+.tasks-subview:not(.active) {
+  display: none;
+}
+
+/* ===== Folders & Shortcuts ===== */
+#shortcuts-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: var(--spacing-md);
+}
+
+#folders-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 900px;
+}
+
+.folder-row,
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  padding: 6px 10px;
+}
+
+.shortcut-row {
+  /* folder rows have a leading chevron (14px + 8px gap) shortcuts don't;
+     pad shortcuts by that same amount so icons align at a shared depth */
+  padding-left: 32px;
+}
+
+.folder-row-chevron {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.folder-row-icon,
+.shortcut-row-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+
+.folder-name-input,
+.shortcut-row-name {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+}
+
+.shortcut-row-name {
+  cursor: pointer;
+}
+
+.shortcut-row-name:hover {
+  text-decoration: underline;
+}
+
+.shortcut-row-path {
+  font-size: 11px;
+  color: var(--color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 260px;
+}
+
+.folder-children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+
 /* ===== Tasks section ===== */
 #tasks-header {
   display: flex;

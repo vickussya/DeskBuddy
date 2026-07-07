@@ -74,7 +74,8 @@ function initStore() {
       theme: 'cozy'
     },
     schedule: [],
-    studioWindowBounds: null
+    studioWindowBounds: null,
+    goals: []
   });
   if (!fs.existsSync(tasksDir)) fs.mkdirSync(tasksDir, { recursive: true });
   if (!fs.existsSync(diaryDir)) fs.mkdirSync(diaryDir, { recursive: true });
@@ -498,6 +499,15 @@ ipcMain.handle('set-checked', (_, workspaceId, checkedIds) => {
 
 ipcMain.handle('open-tasks-file', (_, workspaceId) => {
   shell.openPath(getTasksFilePath(workspaceId));
+  return true;
+});
+
+ipcMain.handle('get-goals', () => {
+  return store.get('goals', []);
+});
+
+ipcMain.handle('save-goals', (_, goals) => {
+  store.set('goals', goals);
   return true;
 });
 

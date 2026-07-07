@@ -7,6 +7,7 @@ async function init() {
   Studio.nav.init();
   Studio.tasks.init(data);
   Studio.diary.init();
+  Studio.goals.init();
   Studio.settings.init(data);
 }
 

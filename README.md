@@ -1,6 +1,6 @@
 # DeskBuddy 🐱
 
-A friendly always-on-top desktop companion for Windows that shows your daily tasks as a checklist inside a hand-drawn speech bubble next to a character of your choice.
+A personal desktop organiser for Windows, built around a small always-on-top character icon that opens into **Studio** — a full workspace for tasks (and, soon, a diary, goals, and an inspiration board).
 
 ![DeskBuddy preview](src/assets/characters/cat.svg)
 
@@ -9,15 +9,18 @@ A friendly always-on-top desktop companion for Windows that shows your daily tas
 
 ## Features
 
-- **Floating window** — frameless, always on top, draggable, remembers its position
-- **System tray** — lives in the tray when closed, right-click to reopen or quit
-- **Daily task checklist** — tasks shown inside a speech bubble, paginated (5 per page), auto-reset every midnight
-- **Two-way task sync** — edit tasks in the app or directly in `tasks.txt` in Notepad; both stay in sync live via file watching
-- **Characters** — Cat, Dog, Person, Robot built-in; each plays a greeting sound on open
-- **Custom character** — upload any image to use as your companion
+- **Floating character icon** — frameless, always on top, draggable, remembers its position; stays on screen until you close it yourself, and is the quick way to reopen Studio
+- **Studio** — a resizable main window with a sidebar: Home, Tasks, Diary, Goals, Inspo (the latter three are placeholders for now — see Roadmap), and Settings
+- **Multi-workspace Tasks** — split your tasks into named workspaces (Uni / Personal / Work by default; add, rename, or delete your own)
+- **Two-way task sync per workspace** — edit tasks in Studio or directly in each workspace's `.txt` file in Notepad; both stay in sync live via file watching
+- **System tray** — lives in the tray when closed, right-click to reopen Studio, bring back the icon, or quit
+- **Characters** — Cat, Dog, Person, Robot built-in, or upload a custom image
 - **Character scheduler** — assign a specific character to a date range
-- **Settings panel** — mute toggle, auto-start on Windows login, open tasks file in Notepad, character picker
-- **Warm hand-drawn aesthetic** — sketchy speech bubble, soft color palette
+- **Warm hand-drawn aesthetic** — built on a CSS-variable theme so more visual styles can be added later
+
+## Roadmap
+
+Diary, Goals, and Inspo (a freeform PureRef-style board for images/video/sketches, usable both standalone and attached to individual tasks) are planned next, followed by in-app folders with shortcuts to local files/folders, and a theme picker (starting with a retro Windows-98-style skin alongside the current cozy look).
 
 ## Getting Started
 
@@ -39,18 +42,17 @@ Or double-click `start-deskbuddy.bat`.
 
 ### First Run
 
-On first launch DeskBuddy creates a `tasks.txt` file in:
+On first launch DeskBuddy creates one `.txt` file per task workspace in:
 ```
-%APPDATA%\deskbuddy\tasks.txt
+%APPDATA%\deskbuddy\tasks\<workspace-id>.txt
 ```
-Open it in Notepad to add tasks — one per line. Changes reload automatically.
+e.g. `tasks\uni.txt`, `tasks\personal.txt`, `tasks\work.txt`. Open any of them in Notepad to add tasks — one per line. Changes reload automatically in Studio. If you're upgrading from an older version with a single `tasks.txt`, its contents are imported into the Personal workspace once, and the original file is left untouched.
 
 ## Replacing Placeholder Assets
 
 | Asset | Location | Format |
 |---|---|---|
 | Character images | `src/assets/characters/` | `cat.png`, `dog.png`, `person.png`, `robot.png` |
-| Sounds | `src/assets/sounds/` | `meow.wav`, `woof.wav`, `hi-there.wav`, `beep-boop.wav` |
 | Tray icon | `src/assets/tray-icon.png` | 16×16 PNG |
 
 ## Tech Stack
@@ -58,28 +60,30 @@ Open it in Notepad to add tasks — one per line. Changes reload automatically.
 - [Electron](https://www.electronjs.org/) v28
 - Vanilla HTML / CSS / JavaScript (no frontend framework)
 - [chokidar](https://github.com/paulmillr/chokidar) for file watching
-- Plain JSON file for persistence (no database)
+- Plain JSON + text files for persistence (no database)
 
 ## Project Structure
 
 ```
 DeskBuddy/
-├── main.js               # Electron main process
-├── preload.js            # Context bridge (IPC)
-├── launch.js             # Launcher (strips ELECTRON_RUN_AS_NODE)
+├── main.js                   # Electron main process
+├── preload.js                # Context bridge (IPC)
+├── launch.js                 # Launcher (strips ELECTRON_RUN_AS_NODE)
 ├── src/
 │   ├── renderer/
-│   │   ├── index.html    # Main companion window
-│   │   ├── style.css
-│   │   ├── renderer.js
-│   │   ├── settings.html # Settings panel
-│   │   ├── settings.css
-│   │   └── settings.js
+│   │   ├── icon.html/js/css  # Always-on-top character launcher window
+│   │   ├── studio.html       # Studio shell (sidebar + panels)
+│   │   ├── studio.css
+│   │   ├── studio.js         # Bootstrap
+│   │   ├── studio-nav.js     # Sidebar section switching
+│   │   ├── studio-tasks.js   # Multi-workspace Tasks
+│   │   ├── studio-settings.js# General / Character / Schedule
+│   │   └── theme.css         # CSS-variable palette (swappable via [data-theme])
 │   └── assets/
-│       ├── characters/   # Character images (SVG placeholders)
-│       ├── sounds/       # Greeting sounds (WAV)
+│       ├── characters/       # Character images (SVG placeholders)
+│       ├── sounds/           # Unused for now (icon window is silent)
 │       └── tray-icon.png
-└── start-deskbuddy.bat   # Windows launcher shortcut
+└── start-deskbuddy.bat        # Windows launcher shortcut
 ```
 
 ## License

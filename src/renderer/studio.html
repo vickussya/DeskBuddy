@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' file: data:;" />
+  <title>DeskBuddy Studio</title>
+  <link rel="stylesheet" href="theme.css" />
+  <link rel="stylesheet" href="studio.css" />
+</head>
+<body>
+  <div id="studio-app">
+    <nav id="sidebar">
+      <div id="sidebar-top">
+        <button class="nav-btn active" data-section="home"><span class="nav-icon">🏠</span> Home</button>
+        <button class="nav-btn" data-section="tasks"><span class="nav-icon">✅</span> Tasks</button>
+        <button class="nav-btn" data-section="diary"><span class="nav-icon">📔</span> Diary</button>
+        <button class="nav-btn" data-section="goals"><span class="nav-icon">🎯</span> Goals</button>
+        <button class="nav-btn" data-section="inspo"><span class="nav-icon">🎨</span> Inspo</button>
+      </div>
+      <div id="sidebar-bottom">
+        <button class="nav-btn" data-section="settings"><span class="nav-icon">⚙️</span> Settings</button>
+      </div>
+    </nav>
+
+    <main id="content">
+
+      <section class="panel active" id="panel-home">
+        <div class="placeholder">
+          <h2>Home</h2>
+          <p>Your combined dashboard is coming soon — one place pulling together tasks, diary, goals, and inspiration.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-tasks">
+        <div id="tasks-header">
+          <div id="workspace-tabs"></div>
+          <button id="btn-add-workspace" class="icon-action-btn" title="Add workspace">+ Workspace</button>
+        </div>
+
+        <div id="workspace-add-form" class="hidden">
+          <input type="text" id="new-workspace-input" placeholder="Workspace name..." maxlength="40" />
+          <button id="btn-confirm-add-workspace">Create</button>
+          <button id="btn-cancel-add-workspace" class="text-btn">Cancel</button>
+        </div>
+
+        <div id="task-add-row">
+          <input type="text" id="new-task-input" placeholder="Add a task..." maxlength="140" />
+          <button id="btn-add-task">Add</button>
+        </div>
+
+        <div id="task-list"></div>
+
+        <div id="workspace-tools">
+          <button id="btn-open-tasks-file" class="text-btn">Open tasks file</button>
+          <button id="btn-rename-workspace" class="text-btn">Rename workspace</button>
+          <button id="btn-delete-workspace" class="text-btn danger">Delete workspace</button>
+        </div>
+
+        <div id="workspace-rename-form" class="hidden">
+          <input type="text" id="rename-workspace-input" maxlength="40" />
+          <button id="btn-confirm-rename-workspace">Save</button>
+          <button id="btn-cancel-rename-workspace" class="text-btn">Cancel</button>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-diary">
+        <div class="placeholder">
+          <h2>Diary</h2>
+          <p>Coming soon — your daily journal.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-goals">
+        <div class="placeholder">
+          <h2>Goals</h2>
+          <p>Coming soon — track progress on the things you're working toward.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-inspo">
+        <div class="placeholder">
+          <h2>Inspo</h2>
+          <p>Coming soon — a freeform board for images, video, and sketches.</p>
+        </div>
+      </section>
+
+      <section class="panel" id="panel-settings">
+        <h2>Settings</h2>
+
+        <div class="settings-block">
+          <p class="section-label">General</p>
+          <div class="setting-row">
+            <label class="setting-label">
+              <span>Launch on Windows startup</span>
+              <span class="setting-desc">Start DeskBuddy automatically when you log in</span>
+            </label>
+            <label class="toggle">
+              <input type="checkbox" id="toggle-autostart" />
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <p class="section-label">Character</p>
+          <div id="character-grid">
+            <div class="char-card" data-char="cat">
+              <div class="char-emoji">🐱</div>
+              <span>Cat</span>
+            </div>
+            <div class="char-card" data-char="dog">
+              <div class="char-emoji">🐶</div>
+              <span>Dog</span>
+            </div>
+            <div class="char-card" data-char="person">
+              <div class="char-emoji">😊</div>
+              <span>Person</span>
+            </div>
+            <div class="char-card" data-char="robot">
+              <div class="char-emoji">🤖</div>
+              <span>Robot</span>
+            </div>
+            <div class="char-card" data-char="custom">
+              <div class="char-emoji" id="custom-preview">⭐</div>
+              <span>Custom</span>
+            </div>
+          </div>
+          <div id="custom-upload-section">
+            <button id="btn-upload-custom" class="action-btn">Upload Custom Image</button>
+            <span id="custom-path-label"></span>
+          </div>
+        </div>
+
+        <div class="settings-block">
+          <p class="section-label">Character schedule</p>
+          <p class="hint-text">Assign a character to a date range. Overrides the default character for matching dates.</p>
+          <div id="schedule-list"></div>
+          <div id="schedule-add-form">
+            <div class="form-row">
+              <label>From</label>
+              <input type="date" id="sched-from" />
+            </div>
+            <div class="form-row">
+              <label>To</label>
+              <input type="date" id="sched-to" />
+            </div>
+            <div class="form-row">
+              <label>Character</label>
+              <select id="sched-character">
+                <option value="cat">Cat</option>
+                <option value="dog">Dog</option>
+                <option value="person">Person</option>
+                <option value="robot">Robot</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <button id="btn-add-schedule" class="action-btn">Add Entry</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="studio-nav.js"></script>
+  <script src="studio-tasks.js"></script>
+  <script src="studio-settings.js"></script>
+  <script src="studio.js"></script>
+</body>
+</html>

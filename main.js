@@ -49,74 +49,160 @@ class JsonStore {
 // --- Store setup (deferred until app is ready so getPath works) ---
 let store = null;
 let userDataPath = null;
-let tasksFilePath = null;
+let tasksDir = null;
+let archivedTasksDir = null;
 
 function initStore() {
   userDataPath = app.getPath('userData');
-  tasksFilePath = path.join(userDataPath, 'tasks.txt');
+  tasksDir = path.join(userDataPath, 'tasks');
+  archivedTasksDir = path.join(tasksDir, '.archived');
   const storePath = path.join(userDataPath, 'deskbuddy-config.json');
   store = new JsonStore(storePath, {
-    tasks: [],
+    schemaVersion: 1,
+    workspaces: [],
+    activeWorkspaceId: null,
+    tasksByWorkspace: {},
+    checkedByWorkspace: {},
     settings: {
       character: 'cat',
-      muted: false,
       autoStart: false,
       customCharacterPath: null,
-      speechBubbleStyle: 'default',
-      tasksFilePath: null
+      iconWindowVisible: true,
+      iconWindowPosition: { x: null, y: null },
+      theme: 'cozy'
     },
     schedule: [],
-    windowPosition: { x: null, y: null },
-    checkedTasks: []
+    studioWindowBounds: null
   });
-  // Always keep tasksFilePath up-to-date in settings
-  store.set('settings.tasksFilePath', tasksFilePath);
+  if (!fs.existsSync(tasksDir)) fs.mkdirSync(tasksDir, { recursive: true });
 }
 
-let mainWindow = null;
-let settingsWindow = null;
+// --- Workspace id slugging ---
+function toWorkspaceId(name, existingIds) {
+  const base = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'workspace';
+  let id = base;
+  let n = 2;
+  while (existingIds.includes(id)) {
+    id = `${base}-${n}`;
+    n++;
+  }
+  return id;
+}
+
+// --- One-time migration to the multi-workspace schema ---
+function migrateLegacyDataIfNeeded() {
+  if (store.get('schemaVersion') === 2) return;
+
+  let workspaces = store.get('workspaces', []);
+  if (!workspaces || workspaces.length === 0) {
+    workspaces = [
+      { id: 'uni', name: 'Uni' },
+      { id: 'personal', name: 'Personal' },
+      { id: 'work', name: 'Work' }
+    ];
+    store.set('workspaces', workspaces);
+  }
+  if (!store.get('activeWorkspaceId')) {
+    store.set('activeWorkspaceId', workspaces[0].id);
+  }
+
+  const tasksByWorkspace = store.get('tasksByWorkspace', {});
+  const checkedByWorkspace = store.get('checkedByWorkspace', {});
+  for (const ws of workspaces) {
+    if (!tasksByWorkspace[ws.id]) tasksByWorkspace[ws.id] = [];
+    if (!checkedByWorkspace[ws.id]) checkedByWorkspace[ws.id] = [];
+  }
+
+  // One-time import of the legacy single tasks.txt into "personal"
+  const legacyPath = path.join(userDataPath, 'tasks.txt');
+  if (fs.existsSync(legacyPath) && tasksByWorkspace.personal && tasksByWorkspace.personal.length === 0) {
+    const legacyTasks = store.get('tasks', []);
+    const legacyChecked = store.get('checkedTasks', []);
+    const lines = fs.readFileSync(legacyPath, 'utf8').split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    const imported = lines.map((text, i) => {
+      const existing = legacyTasks.find(t => t.text === text);
+      return { id: existing ? existing.id : Date.now() + i, text };
+    });
+    tasksByWorkspace.personal = imported;
+    checkedByWorkspace.personal = legacyChecked.filter(id => imported.some(t => t.id === id));
+  }
+
+  store.set('tasksByWorkspace', tasksByWorkspace);
+  store.set('checkedByWorkspace', checkedByWorkspace);
+  store.set('schemaVersion', 2);
+}
+
+let iconWindow = null;
+let studioWindow = null;
 let tray = null;
-let fileWatcher = null;
-let isMiniMode = false;
+const fileWatchers = new Map();
+const ignoreNextChange = new Set();
 
-const FULL_W = 460, FULL_H = 280;
-const MINI_W = 80, MINI_H = 88;
-const MARGIN = 16;
+const ICON_W = 80, ICON_H = 88, ICON_MARGIN = 16;
+const STUDIO_W = 900, STUDIO_H = 650, STUDIO_MIN_W = 720, STUDIO_MIN_H = 480;
 
-// --- Ensure tasks.txt exists ---
-function ensureTasksFile() {
-  if (!fs.existsSync(tasksFilePath)) {
-    const tasks = store.get('tasks', []);
+// --- Per-workspace task files ---
+function getTasksFilePath(id) {
+  return path.join(tasksDir, `${id}.txt`);
+}
+
+function ensureTasksFile(id) {
+  const filePath = getTasksFilePath(id);
+  if (!fs.existsSync(filePath)) {
+    const tasks = store.get(`tasksByWorkspace.${id}`, []);
     const content = tasks.map(t => t.text).join('\n');
-    fs.writeFileSync(tasksFilePath, content, 'utf8');
+    fs.writeFileSync(filePath, content, 'utf8');
   }
 }
 
-// --- Sync tasks.txt -> store ---
-function loadTasksFromFile() {
+function loadTasksFromFile(id) {
   try {
-    const content = fs.readFileSync(tasksFilePath, 'utf8');
+    const content = fs.readFileSync(getTasksFilePath(id), 'utf8');
     const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    const existingTasks = store.get('tasks', []);
+    const existingTasks = store.get(`tasksByWorkspace.${id}`, []);
     const newTasks = lines.map((text, i) => {
       const existing = existingTasks.find(t => t.text === text);
       return { id: existing ? existing.id : Date.now() + i, text };
     });
-    store.set('tasks', newTasks);
-    const checkedTasks = store.get('checkedTasks', []);
+    store.set(`tasksByWorkspace.${id}`, newTasks);
+    const checked = store.get(`checkedByWorkspace.${id}`, []);
     const validIds = newTasks.map(t => t.id);
-    const filteredChecked = checkedTasks.filter(id => validIds.includes(id));
-    store.set('checkedTasks', filteredChecked);
+    store.set(`checkedByWorkspace.${id}`, checked.filter(cid => validIds.includes(cid)));
     return newTasks;
   } catch (e) {
-    return store.get('tasks', []);
+    return store.get(`tasksByWorkspace.${id}`, []);
   }
 }
 
-// --- Sync store -> tasks.txt ---
-function saveTasksToFile(tasks) {
+function saveTasksToFile(id, tasks) {
   const content = tasks.map(t => t.text).join('\n');
-  fs.writeFileSync(tasksFilePath, content, 'utf8');
+  fs.writeFileSync(getTasksFilePath(id), content, 'utf8');
+}
+
+function startWatcherForWorkspace(id) {
+  if (fileWatchers.has(id)) return;
+  ensureTasksFile(id);
+  const watcher = chokidar.watch(getTasksFilePath(id), {
+    persistent: true,
+    ignoreInitial: true,
+    awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 }
+  });
+  watcher.on('change', () => {
+    if (ignoreNextChange.has(id)) { ignoreNextChange.delete(id); return; }
+    const tasks = loadTasksFromFile(id);
+    if (studioWindow && !studioWindow.isDestroyed()) {
+      studioWindow.webContents.send('tasks-updated', { workspaceId: id, tasks });
+    }
+  });
+  fileWatchers.set(id, watcher);
+}
+
+function stopWatcherForWorkspace(id) {
+  const watcher = fileWatchers.get(id);
+  if (watcher) {
+    watcher.close();
+    fileWatchers.delete(id);
+  }
 }
 
 // --- Get active character based on schedule ---
@@ -155,17 +241,22 @@ function getAutoStartStatus() {
   }).openAtLogin;
 }
 
-// --- Create main window ---
-function createMainWindow() {
-  const pos = store.get('windowPosition', { x: null, y: null });
+// --- Create icon window (always-on-top character launcher) ---
+function createIconWindow() {
+  if (iconWindow && !iconWindow.isDestroyed()) {
+    iconWindow.focus();
+    return;
+  }
+
+  const pos = store.get('settings.iconWindowPosition', { x: null, y: null });
   const { workArea } = screen.getPrimaryDisplay();
 
-  const startX = pos.x !== null ? pos.x : workArea.x + workArea.width - FULL_W - MARGIN;
-  const startY = pos.y !== null ? pos.y : workArea.y + workArea.height - FULL_H - MARGIN;
+  const startX = pos.x !== null ? pos.x : workArea.x + workArea.width - ICON_W - ICON_MARGIN;
+  const startY = pos.y !== null ? pos.y : workArea.y + workArea.height - ICON_H - ICON_MARGIN;
 
-  mainWindow = new BrowserWindow({
-    width: FULL_W,
-    height: FULL_H,
+  iconWindow = new BrowserWindow({
+    width: ICON_W,
+    height: ICON_H,
     x: startX,
     y: startY,
     frame: false,
@@ -180,36 +271,47 @@ function createMainWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, 'src', 'renderer', 'index.html'));
+  iconWindow.loadFile(path.join(__dirname, 'src', 'renderer', 'icon.html'));
 
-  mainWindow.on('moved', () => {
-    const [x, y] = mainWindow.getPosition();
-    store.set('windowPosition', { x, y });
+  iconWindow.on('moved', () => {
+    const [x, y] = iconWindow.getPosition();
+    store.set('settings.iconWindowPosition', { x, y });
   });
 
-  mainWindow.on('close', (e) => {
-    e.preventDefault();
-    mainWindow.hide();
+  iconWindow.on('closed', () => {
+    iconWindow = null;
   });
 
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-  });
+  store.set('settings.iconWindowVisible', true);
 }
 
-// --- Create settings window ---
-function createSettingsWindow() {
-  if (settingsWindow && !settingsWindow.isDestroyed()) {
-    settingsWindow.focus();
+function closeIconWindow() {
+  store.set('settings.iconWindowVisible', false);
+  if (iconWindow && !iconWindow.isDestroyed()) {
+    iconWindow.destroy();
+  }
+  iconWindow = null;
+}
+
+// --- Create Studio window (the main organiser) ---
+function createStudioWindow() {
+  if (studioWindow && !studioWindow.isDestroyed()) {
+    studioWindow.show();
+    studioWindow.focus();
     return;
   }
 
-  settingsWindow = new BrowserWindow({
-    width: 480,
-    height: 600,
-    title: 'DeskBuddy Settings',
-    resizable: false,
-    minimizable: false,
+  const bounds = store.get('studioWindowBounds');
+
+  studioWindow = new BrowserWindow({
+    width: bounds ? bounds.width : STUDIO_W,
+    height: bounds ? bounds.height : STUDIO_H,
+    x: bounds ? bounds.x : undefined,
+    y: bounds ? bounds.y : undefined,
+    minWidth: STUDIO_MIN_W,
+    minHeight: STUDIO_MIN_H,
+    title: 'DeskBuddy Studio',
+    resizable: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -217,11 +319,23 @@ function createSettingsWindow() {
     }
   });
 
-  settingsWindow.setMenu(null);
-  settingsWindow.loadFile(path.join(__dirname, 'src', 'renderer', 'settings.html'));
+  studioWindow.setMenu(null);
+  studioWindow.loadFile(path.join(__dirname, 'src', 'renderer', 'studio.html'));
 
-  settingsWindow.on('closed', () => {
-    settingsWindow = null;
+  const persistBounds = () => {
+    if (!studioWindow || studioWindow.isDestroyed()) return;
+    store.set('studioWindowBounds', studioWindow.getBounds());
+  };
+  studioWindow.on('resize', persistBounds);
+  studioWindow.on('move', persistBounds);
+
+  studioWindow.on('close', (e) => {
+    e.preventDefault();
+    studioWindow.hide();
+  });
+
+  studioWindow.on('closed', () => {
+    studioWindow = null;
   });
 }
 
@@ -233,7 +347,6 @@ function createTray() {
     icon = nativeImage.createFromPath(iconPath);
     if (icon.isEmpty()) throw new Error('empty');
   } catch {
-    // Fallback: create a simple 16x16 orange icon
     icon = nativeImage.createFromDataURL(
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAAIUlEQVQ4jWNgGAWjgB' +
       'AAAAkAABAAFAAQABQAEAAUABAAFA=='
@@ -242,125 +355,163 @@ function createTray() {
 
   tray = new Tray(icon);
 
-  const contextMenu = Menu.buildFromTemplate([
-    {
-      label: 'Show DeskBuddy',
-      click: () => {
-        if (mainWindow) {
-          mainWindow.show();
-          mainWindow.focus();
-        } else {
-          createMainWindow();
-        }
+  const rebuildMenu = () => {
+    const iconVisible = iconWindow && !iconWindow.isDestroyed();
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: 'Open Studio',
+        click: () => createStudioWindow()
+      },
+      {
+        label: 'Show Character Icon',
+        enabled: !iconVisible,
+        click: () => createIconWindow()
+      },
+      { type: 'separator' },
+      {
+        label: 'Quit',
+        click: () => app.quit()
       }
-    },
-    {
-      label: 'Settings',
-      click: () => createSettingsWindow()
-    },
-    { type: 'separator' },
-    {
-      label: 'Quit',
-      click: () => {
-        app.quit();
-      }
-    }
-  ]);
+    ]);
+    tray.setContextMenu(contextMenu);
+  };
 
   tray.setToolTip('DeskBuddy');
-  tray.setContextMenu(contextMenu);
+  rebuildMenu();
 
-  tray.on('click', () => {
-    if (mainWindow) {
-      if (mainWindow.isVisible()) {
-        mainWindow.hide();
-      } else {
-        mainWindow.show();
-        mainWindow.focus();
-      }
-    }
-  });
-}
+  tray.on('click', () => createStudioWindow());
 
-// --- File watcher ---
-function startFileWatcher() {
-  ensureTasksFile();
-  let ignoreNext = false;
-
-  fileWatcher = chokidar.watch(tasksFilePath, {
-    persistent: true,
-    ignoreInitial: true,
-    awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 }
-  });
-
-  fileWatcher.on('change', () => {
-    if (ignoreNext) { ignoreNext = false; return; }
-    const tasks = loadTasksFromFile();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('tasks-updated', tasks);
-    }
-    if (settingsWindow && !settingsWindow.isDestroyed()) {
-      settingsWindow.webContents.send('tasks-updated', tasks);
-    }
-  });
-
-  global.suppressNextFileEvent = () => { ignoreNext = true; };
+  global.refreshTrayMenu = rebuildMenu;
 }
 
 // --- IPC handlers ---
 function setupIPC() {
-ipcMain.handle('get-initial-data', () => {
-  const tasks = loadTasksFromFile();
-  const settings = store.get('settings');
+
+ipcMain.handle('get-icon-init-data', () => {
   return {
-    tasks,
-    checkedTasks: store.get('checkedTasks', []),
-    settings: { ...settings, tasksFilePath, autoStart: getAutoStartStatus() },
-    schedule: store.get('schedule', []),
     character: getActiveCharacter(),
-    tasksFilePath
+    theme: store.get('settings.theme', 'cozy')
   };
 });
 
-ipcMain.handle('get-tasks', () => {
+ipcMain.handle('get-studio-init-data', () => {
+  const workspaces = store.get('workspaces', []);
+  const tasksByWorkspace = {};
+  const checkedByWorkspace = {};
+  for (const ws of workspaces) {
+    tasksByWorkspace[ws.id] = store.get(`tasksByWorkspace.${ws.id}`, []);
+    checkedByWorkspace[ws.id] = store.get(`checkedByWorkspace.${ws.id}`, []);
+  }
   return {
-    tasks: store.get('tasks', []),
-    checkedTasks: store.get('checkedTasks', [])
+    workspaces,
+    activeWorkspaceId: store.get('activeWorkspaceId'),
+    tasksByWorkspace,
+    checkedByWorkspace,
+    settings: { ...store.get('settings'), autoStart: getAutoStartStatus() },
+    schedule: store.get('schedule', [])
   };
 });
 
-ipcMain.handle('save-tasks', (_, tasks) => {
-  store.set('tasks', tasks);
-  global.suppressNextFileEvent && global.suppressNextFileEvent();
-  saveTasksToFile(tasks);
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('tasks-updated', tasks);
+ipcMain.handle('create-workspace', (_, name) => {
+  const workspaces = store.get('workspaces', []);
+  const id = toWorkspaceId(name, workspaces.map(w => w.id));
+  const ws = { id, name: name.trim() };
+  workspaces.push(ws);
+  store.set('workspaces', workspaces);
+  store.set(`tasksByWorkspace.${id}`, []);
+  store.set(`checkedByWorkspace.${id}`, []);
+  startWatcherForWorkspace(id);
+  return ws;
+});
+
+ipcMain.handle('rename-workspace', (_, id, newName) => {
+  const workspaces = store.get('workspaces', []);
+  const ws = workspaces.find(w => w.id === id);
+  if (ws) {
+    ws.name = newName.trim();
+    store.set('workspaces', workspaces);
   }
   return true;
 });
 
-ipcMain.handle('set-checked', (_, checkedTasks) => {
-  store.set('checkedTasks', checkedTasks);
+ipcMain.handle('delete-workspace', (_, id) => {
+  const workspaces = store.get('workspaces', []).filter(w => w.id !== id);
+  store.set('workspaces', workspaces);
+
+  stopWatcherForWorkspace(id);
+
+  const tasksByWorkspace = store.get('tasksByWorkspace', {});
+  delete tasksByWorkspace[id];
+  store.set('tasksByWorkspace', tasksByWorkspace);
+
+  const checkedByWorkspace = store.get('checkedByWorkspace', {});
+  delete checkedByWorkspace[id];
+  store.set('checkedByWorkspace', checkedByWorkspace);
+
+  const filePath = getTasksFilePath(id);
+  if (fs.existsSync(filePath)) {
+    if (!fs.existsSync(archivedTasksDir)) fs.mkdirSync(archivedTasksDir, { recursive: true });
+    const archivedPath = path.join(archivedTasksDir, `${id}-${Date.now()}.txt`);
+    fs.renameSync(filePath, archivedPath);
+  }
+
+  if (store.get('activeWorkspaceId') === id) {
+    store.set('activeWorkspaceId', workspaces.length > 0 ? workspaces[0].id : null);
+  }
+
+  return true;
+});
+
+ipcMain.handle('set-active-workspace', (_, id) => {
+  store.set('activeWorkspaceId', id);
+  return true;
+});
+
+ipcMain.handle('get-tasks', (_, workspaceId) => {
+  return {
+    tasks: store.get(`tasksByWorkspace.${workspaceId}`, []),
+    checkedTasks: store.get(`checkedByWorkspace.${workspaceId}`, [])
+  };
+});
+
+ipcMain.handle('save-tasks', (_, workspaceId, tasks) => {
+  store.set(`tasksByWorkspace.${workspaceId}`, tasks);
+  ignoreNextChange.add(workspaceId);
+  saveTasksToFile(workspaceId, tasks);
+  if (studioWindow && !studioWindow.isDestroyed()) {
+    studioWindow.webContents.send('tasks-updated', { workspaceId, tasks });
+  }
+  return true;
+});
+
+ipcMain.handle('set-checked', (_, workspaceId, checkedIds) => {
+  store.set(`checkedByWorkspace.${workspaceId}`, checkedIds);
+  return true;
+});
+
+ipcMain.handle('open-tasks-file', (_, workspaceId) => {
+  shell.openPath(getTasksFilePath(workspaceId));
   return true;
 });
 
 ipcMain.handle('get-settings', () => {
   return {
     ...store.get('settings'),
-    autoStart: getAutoStartStatus(),
-    tasksFilePath
+    autoStart: getAutoStartStatus()
   };
 });
 
 ipcMain.handle('save-settings', (_, settings) => {
-  // Don't overwrite tasksFilePath from renderer
-  const { tasksFilePath: _ignored, autoStart, ...rest } = settings;
+  const { autoStart, ...rest } = settings;
   store.set('settings', { ...store.get('settings'), ...rest });
   if (autoStart !== undefined) {
     setAutoStart(autoStart);
   }
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('settings-updated', settings);
+  if (studioWindow && !studioWindow.isDestroyed()) {
+    studioWindow.webContents.send('settings-updated', settings);
+  }
+  if (iconWindow && !iconWindow.isDestroyed()) {
+    iconWindow.webContents.send('character-changed', getActiveCharacter());
   }
   return true;
 });
@@ -372,24 +523,37 @@ ipcMain.handle('get-schedule', () => {
 ipcMain.handle('save-schedule', (_, schedule) => {
   store.set('schedule', schedule);
   const activeChar = getActiveCharacter();
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('character-changed', activeChar);
+  if (iconWindow && !iconWindow.isDestroyed()) {
+    iconWindow.webContents.send('character-changed', activeChar);
   }
   return true;
 });
 
-ipcMain.handle('open-settings', () => {
-  createSettingsWindow();
+ipcMain.handle('open-studio', () => {
+  createStudioWindow();
   return true;
 });
 
-ipcMain.handle('open-tasks-file', () => {
-  shell.openPath(tasksFilePath);
+ipcMain.handle('close-icon-window', () => {
+  closeIconWindow();
+  if (global.refreshTrayMenu) global.refreshTrayMenu();
   return true;
+});
+
+ipcMain.handle('show-icon-context-menu', () => {
+  if (!iconWindow || iconWindow.isDestroyed()) return;
+  const menu = Menu.buildFromTemplate([
+    { label: 'Open Studio', click: () => createStudioWindow() },
+    { label: 'Close Icon', click: () => {
+      closeIconWindow();
+      if (global.refreshTrayMenu) global.refreshTrayMenu();
+    } }
+  ]);
+  menu.popup({ window: iconWindow });
 });
 
 ipcMain.handle('choose-custom-image', async () => {
-  const parent = settingsWindow && !settingsWindow.isDestroyed() ? settingsWindow : mainWindow;
+  const parent = studioWindow && !studioWindow.isDestroyed() ? studioWindow : undefined;
   const result = await dialog.showOpenDialog(parent, {
     title: 'Choose Character Image',
     filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'] }],
@@ -411,7 +575,6 @@ ipcMain.handle('get-character-image-path', (_, character) => {
   if (character === 'custom') {
     return store.get('settings.customCharacterPath');
   }
-  // Prefer PNG, fall back to SVG
   const pngPath = path.join(__dirname, 'src', 'assets', 'characters', `${character}.png`);
   const svgPath = path.join(__dirname, 'src', 'assets', 'characters', `${character}.svg`);
   if (fs.existsSync(pngPath)) return pngPath;
@@ -419,49 +582,23 @@ ipcMain.handle('get-character-image-path', (_, character) => {
   return null;
 });
 
-ipcMain.handle('hide-window', () => {
-  if (mainWindow) mainWindow.hide();
-  return true;
-});
-
-ipcMain.handle('toggle-mini-mode', () => {
-  if (!mainWindow || mainWindow.isDestroyed()) return isMiniMode;
-  isMiniMode = !isMiniMode;
-  const { workArea } = screen.getPrimaryDisplay();
-
-  mainWindow.setResizable(true);
-  if (isMiniMode) {
-    mainWindow.setSize(MINI_W, MINI_H);
-    mainWindow.setPosition(
-      workArea.x + workArea.width - MINI_W - MARGIN,
-      workArea.y + workArea.height - MINI_H - MARGIN
-    );
-  } else {
-    mainWindow.setSize(FULL_W, FULL_H);
-    const pos = store.get('windowPosition', { x: null, y: null });
-    const rx = pos.x !== null ? pos.x : workArea.x + workArea.width - FULL_W - MARGIN;
-    const ry = pos.y !== null ? pos.y : workArea.y + workArea.height - FULL_H - MARGIN;
-    mainWindow.setPosition(rx, ry);
-  }
-  mainWindow.setResizable(false);
-  mainWindow.webContents.send('mini-mode-changed', isMiniMode);
-  return isMiniMode;
-});
-
-ipcMain.handle('close-settings', () => {
-  if (settingsWindow) settingsWindow.close();
-  return true;
-});
 } // end setupIPC
 
 // --- App lifecycle ---
 app.on('ready', () => {
   initStore();
-  ensureTasksFile();
+  migrateLegacyDataIfNeeded();
   setupIPC();
   createTray();
-  createMainWindow();
-  startFileWatcher();
+
+  const workspaces = store.get('workspaces', []);
+  for (const ws of workspaces) {
+    startWatcherForWorkspace(ws.id);
+  }
+
+  if (store.get('settings.iconWindowVisible', true)) {
+    createIconWindow();
+  }
 });
 
 app.on('window-all-closed', (e) => {
@@ -469,9 +606,15 @@ app.on('window-all-closed', (e) => {
 });
 
 app.on('before-quit', () => {
-  if (fileWatcher) fileWatcher.close();
-  if (mainWindow) {
-    mainWindow.removeAllListeners('close');
-    mainWindow.destroy();
+  for (const watcher of fileWatchers.values()) watcher.close();
+  fileWatchers.clear();
+
+  if (studioWindow) {
+    studioWindow.removeAllListeners('close');
+    studioWindow.destroy();
+  }
+  if (iconWindow) {
+    iconWindow.removeAllListeners('close');
+    iconWindow.destroy();
   }
 });

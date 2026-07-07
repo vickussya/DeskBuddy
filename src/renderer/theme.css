@@ -1,0 +1,31 @@
+/* ===== Theme tokens =====
+   Swapped per [data-theme] on <html>. Only "cozy" exists today;
+   future themes (e.g. a retro Windows-98 skin) add another block here
+   without touching component CSS. */
+
+:root,
+:root[data-theme="cozy"] {
+  --color-bg-primary: #fdf6ec;
+  --color-bg-secondary: #f0e4cc;
+  --color-bg-elevated: #fffaf0;
+  --color-border: #c9a96e;
+  --color-border-soft: #e8d4b0;
+  --color-accent: #e8c98a;
+  --color-accent-strong: #c9a96e;
+  --color-accent-hover: #a07840;
+  --color-text-primary: #4a3728;
+  --color-text-secondary: #8b6340;
+  --color-text-muted: #a07840;
+  --color-danger: #b5533c;
+
+  --font-family-base: 'Segoe UI', 'Comic Sans MS', cursive, sans-serif;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 14px;
+  --spacing-lg: 22px;
+}

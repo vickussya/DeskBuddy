@@ -1,0 +1,56 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  background: transparent;
+  overflow: hidden;
+  width: 80px;
+  height: 88px;
+  user-select: none;
+}
+
+#icon-app {
+  position: relative;
+  width: 80px;
+  height: 88px;
+}
+
+#icon-drag-bar {
+  -webkit-app-region: drag;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+#icon-character-img {
+  -webkit-app-region: no-drag;
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 72px;
+  height: 80px;
+  object-fit: contain;
+  object-position: bottom center;
+  cursor: pointer;
+  z-index: 2;
+  border-radius: 50% 50% 44% 44% / 50% 50% 40% 40%;
+  background: rgba(255, 248, 235, 0.92);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.22),
+    0 0 0 3px var(--color-accent-strong),
+    0 0 0 6px rgba(201,169,110,0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  image-rendering: pixelated;
+}
+
+#icon-character-img:hover {
+  transform: translateX(-50%) scale(1.08);
+  box-shadow:
+    0 6px 20px rgba(0,0,0,0.28),
+    0 0 0 3px var(--color-accent-hover),
+    0 0 0 6px rgba(201,169,110,0.4);
+}

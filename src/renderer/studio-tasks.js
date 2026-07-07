@@ -170,10 +170,17 @@ Studio.tasks = {
         this.saveTasks();
       });
 
+      const btnInspo = document.createElement('button');
+      btnInspo.className = 'task-btn';
+      btnInspo.textContent = '🎨';
+      btnInspo.title = 'Open Inspo for this task';
+      btnInspo.addEventListener('click', () => Studio.inspo.openForTask(task.id, task.text));
+
       row.appendChild(checkbox);
       row.appendChild(input);
       row.appendChild(btnUp);
       row.appendChild(btnDown);
+      row.appendChild(btnInspo);
       row.appendChild(btnDel);
       list.appendChild(row);
     });

@@ -625,6 +625,73 @@ h2 {
   color: white;
 }
 
+/* ===== Task Inspo modal ===== */
+#task-inspo-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(74, 55, 40, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+#task-inspo-modal.hidden {
+  display: none;
+}
+
+#task-inspo-modal-inner {
+  width: 90vw;
+  height: 85vh;
+  background: var(--color-bg-primary);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+#task-inspo-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+#task-inspo-modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+#task-inspo-toolbar {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+}
+
+#task-inspo-canvas {
+  flex: 1;
+  overflow: auto;
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  position: relative;
+}
+
+#task-inspo-canvas.drop-active {
+  border-color: var(--color-accent-hover);
+  box-shadow: inset 0 0 0 2px var(--color-accent-hover);
+}
+
+#task-inspo-canvas-inner {
+  position: relative;
+  width: 3000px;
+  height: 2000px;
+}
+
 /* ===== Diary ===== */
 #diary-header {
   display: flex;

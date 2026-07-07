@@ -90,8 +90,21 @@ function getDiaryFilePath(dateId) {
   return path.join(diaryDir, `${dateId}.txt`);
 }
 
-function getInspoBoardPath() {
-  return path.join(inspoDir, 'board.json');
+function getInspoDirs(boardId) {
+  if (!boardId) return { dir: inspoDir, mediaDir: inspoMediaDir };
+  const dir = path.join(inspoDir, 'tasks', boardId);
+  return { dir, mediaDir: path.join(dir, 'media') };
+}
+
+function getInspoBoardPath(boardId) {
+  return path.join(getInspoDirs(boardId).dir, 'board.json');
+}
+
+function ensureInspoMediaDir(boardId) {
+  const { dir, mediaDir } = getInspoDirs(boardId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  if (!fs.existsSync(mediaDir)) fs.mkdirSync(mediaDir, { recursive: true });
+  return mediaDir;
 }
 
 function uniqueMediaName(ext) {
@@ -537,27 +550,30 @@ ipcMain.handle('save-diary-entry', (_, dateId, text) => {
   return true;
 });
 
-ipcMain.handle('get-inspo-board', () => {
+ipcMain.handle('get-inspo-board', (_, boardId) => {
   try {
-    return JSON.parse(fs.readFileSync(getInspoBoardPath(), 'utf8'));
+    return JSON.parse(fs.readFileSync(getInspoBoardPath(boardId), 'utf8'));
   } catch {
     return { items: [], nextZ: 1 };
   }
 });
 
-ipcMain.handle('save-inspo-board', (_, board) => {
-  fs.writeFileSync(getInspoBoardPath(), JSON.stringify(board, null, 2), 'utf8');
+ipcMain.handle('save-inspo-board', (_, boardId, board) => {
+  const { dir } = getInspoDirs(boardId);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(getInspoBoardPath(boardId), JSON.stringify(board, null, 2), 'utf8');
   return true;
 });
 
-ipcMain.handle('import-inspo-image', (_, srcPath) => {
+ipcMain.handle('import-inspo-image', (_, boardId, srcPath) => {
+  const mediaDir = ensureInspoMediaDir(boardId);
   const ext = path.extname(srcPath) || '.png';
-  const destPath = path.join(inspoMediaDir, uniqueMediaName(ext));
+  const destPath = path.join(mediaDir, uniqueMediaName(ext));
   fs.copyFileSync(srcPath, destPath);
   return destPath;
 });
 
-ipcMain.handle('pick-inspo-images', async () => {
+ipcMain.handle('pick-inspo-images', async (_, boardId) => {
   const parent = studioWindow && !studioWindow.isDestroyed() ? studioWindow : undefined;
   const result = await dialog.showOpenDialog(parent, {
     title: 'Add Images to Inspo',
@@ -565,18 +581,20 @@ ipcMain.handle('pick-inspo-images', async () => {
     properties: ['openFile', 'multiSelections']
   });
   if (result.canceled) return [];
+  const mediaDir = ensureInspoMediaDir(boardId);
   return result.filePaths.map(srcPath => {
     const ext = path.extname(srcPath) || '.png';
-    const destPath = path.join(inspoMediaDir, uniqueMediaName(ext));
+    const destPath = path.join(mediaDir, uniqueMediaName(ext));
     fs.copyFileSync(srcPath, destPath);
     return destPath;
   });
 });
 
-ipcMain.handle('save-inspo-drawing', (_, dataUrl, existingPath) => {
+ipcMain.handle('save-inspo-drawing', (_, boardId, dataUrl, existingPath) => {
+  const mediaDir = ensureInspoMediaDir(boardId);
   const base64 = dataUrl.replace(/^data:image\/png;base64,/, '');
   const buffer = Buffer.from(base64, 'base64');
-  const destPath = existingPath || path.join(inspoMediaDir, uniqueMediaName('.png'));
+  const destPath = existingPath || path.join(mediaDir, uniqueMediaName('.png'));
   fs.writeFileSync(destPath, buffer);
   return destPath;
 });

@@ -197,10 +197,10 @@
     </main>
   </div>
 
-  <div id="task-inspo-modal" class="hidden">
-    <div id="task-inspo-modal-inner">
-      <div id="task-inspo-modal-header">
-        <span id="task-inspo-modal-title"></span>
+  <div id="task-inspo-modal" class="task-modal hidden">
+    <div class="task-modal-inner">
+      <div class="task-modal-header">
+        <span id="task-inspo-modal-title" class="task-modal-title"></span>
         <button id="btn-close-task-inspo" class="icon-action-btn">Close</button>
       </div>
       <div id="task-inspo-toolbar">
@@ -211,6 +211,20 @@
       <div id="task-inspo-canvas">
         <div id="task-inspo-canvas-inner"></div>
       </div>
+    </div>
+  </div>
+
+  <div id="task-folders-modal" class="task-modal hidden">
+    <div class="task-modal-inner">
+      <div class="task-modal-header">
+        <span id="task-folders-modal-title" class="task-modal-title"></span>
+        <button id="btn-close-task-folders" class="icon-action-btn">Close</button>
+      </div>
+      <div id="task-folders-toolbar">
+        <button id="btn-task-add-root-folder" class="icon-action-btn">+ Folder</button>
+        <button id="btn-task-add-root-shortcut" class="icon-action-btn">+ Shortcut</button>
+      </div>
+      <div id="task-folders-tree"></div>
     </div>
   </div>
 

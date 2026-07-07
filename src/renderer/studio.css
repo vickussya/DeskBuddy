@@ -247,10 +247,12 @@ h2 {
 }
 
 /* ===== Folders & Shortcuts ===== */
-#shortcuts-toolbar {
+#shortcuts-toolbar,
+#task-folders-toolbar {
   display: flex;
   gap: 8px;
   margin-bottom: var(--spacing-md);
+  flex-shrink: 0;
 }
 
 #folders-tree {
@@ -258,6 +260,14 @@ h2 {
   flex-direction: column;
   gap: 6px;
   max-width: 900px;
+}
+
+#task-folders-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .folder-row,
@@ -903,8 +913,8 @@ h2 {
   color: white;
 }
 
-/* ===== Task Inspo modal ===== */
-#task-inspo-modal {
+/* ===== Shared task-detail modal chrome (Inspo + Folders per-task modals) ===== */
+.task-modal {
   position: fixed;
   inset: 0;
   background: rgba(74, 55, 40, 0.45);
@@ -914,11 +924,11 @@ h2 {
   z-index: 50;
 }
 
-#task-inspo-modal.hidden {
+.task-modal.hidden {
   display: none;
 }
 
-#task-inspo-modal-inner {
+.task-modal-inner {
   width: 90vw;
   height: 85vh;
   background: var(--color-bg-primary);
@@ -931,19 +941,20 @@ h2 {
   gap: var(--spacing-sm);
 }
 
-#task-inspo-modal-header {
+.task-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
 }
 
-#task-inspo-modal-title {
+.task-modal-title {
   font-size: 15px;
   font-weight: 700;
   color: var(--color-text-primary);
 }
 
+/* ===== Task Inspo modal ===== */
 #task-inspo-toolbar {
   display: flex;
   gap: var(--spacing-sm);

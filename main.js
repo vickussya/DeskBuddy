@@ -538,16 +538,23 @@ ipcMain.handle('save-goals', (_, goals) => {
   return true;
 });
 
-ipcMain.handle('get-folders-shortcuts', () => {
-  return {
-    folders: store.get('folders', []),
-    shortcuts: store.get('shortcuts', [])
-  };
+ipcMain.handle('get-folders-shortcuts', (_, boardId) => {
+  if (!boardId) {
+    return {
+      folders: store.get('folders', []),
+      shortcuts: store.get('shortcuts', [])
+    };
+  }
+  return store.get(`taskFoldersShortcuts.${boardId}`, { folders: [], shortcuts: [] });
 });
 
-ipcMain.handle('save-folders-shortcuts', (_, data) => {
-  store.set('folders', data.folders);
-  store.set('shortcuts', data.shortcuts);
+ipcMain.handle('save-folders-shortcuts', (_, boardId, data) => {
+  if (!boardId) {
+    store.set('folders', data.folders);
+    store.set('shortcuts', data.shortcuts);
+  } else {
+    store.set(`taskFoldersShortcuts.${boardId}`, data);
+  }
   return true;
 });
 

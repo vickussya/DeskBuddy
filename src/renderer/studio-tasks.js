@@ -184,11 +184,18 @@ Studio.tasks = {
       btnInspo.title = 'Open Inspo for this task';
       btnInspo.addEventListener('click', () => Studio.inspo.openForTask(task.id, task.text));
 
+      const btnFolders = document.createElement('button');
+      btnFolders.className = 'task-btn';
+      btnFolders.textContent = '📁';
+      btnFolders.title = 'Open Folders for this task';
+      btnFolders.addEventListener('click', () => Studio.folders.openForTask(task.id, task.text));
+
       row.appendChild(checkbox);
       row.appendChild(input);
       row.appendChild(btnUp);
       row.appendChild(btnDown);
       row.appendChild(btnInspo);
+      row.appendChild(btnFolders);
       row.appendChild(btnDel);
       list.appendChild(row);
     });

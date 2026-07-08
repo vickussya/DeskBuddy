@@ -22,6 +22,9 @@ contextBridge.exposeInMainWorld('api', {
   savePlanItems: (dateId, items) => ipcRenderer.invoke('save-plan-items', dateId, items),
   getAllPlanItems: () => ipcRenderer.invoke('get-plan-items-all'),
 
+  getTrash: () => ipcRenderer.invoke('get-trash'),
+  saveTrash: (trash) => ipcRenderer.invoke('save-trash', trash),
+
   getCalendarDecor: (dateId) => ipcRenderer.invoke('get-calendar-decor', dateId),
   saveCalendarDecor: (dateId, items) => ipcRenderer.invoke('save-calendar-decor', dateId, items),
   importCalendarPhoto: (srcPath) => ipcRenderer.invoke('import-calendar-photo', srcPath),

@@ -83,7 +83,8 @@ function initStore() {
     goals: [],
     goalsByWorkspace: {},
     plansByDate: {},
-    calendarDecor: {}
+    calendarDecor: {},
+    trash: []
   });
   if (!fs.existsSync(diaryDir)) fs.mkdirSync(diaryDir, { recursive: true });
   if (!fs.existsSync(inspoMediaDir)) fs.mkdirSync(inspoMediaDir, { recursive: true });
@@ -494,6 +495,15 @@ ipcMain.handle('save-plan-items', (_, dateId, items) => {
 
 ipcMain.handle('get-plan-items-all', () => {
   return store.get('plansByDate', {});
+});
+
+ipcMain.handle('get-trash', () => {
+  return store.get('trash', []);
+});
+
+ipcMain.handle('save-trash', (_, trash) => {
+  store.set('trash', trash);
+  return true;
 });
 
 ipcMain.handle('get-calendar-decor', (_, dateId) => {

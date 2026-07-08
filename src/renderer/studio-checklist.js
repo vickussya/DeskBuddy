@@ -23,9 +23,12 @@ Studio.checklist = {
     const main = document.createElement('div');
     main.className = 'checklist-row-main';
 
-    const checkbox = document.createElement('div');
-    checkbox.className = 'task-checkbox' + (item.checked ? ' checked' : '');
-    checkbox.addEventListener('click', () => opts.onToggle(item));
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-checkbox';
+    checkbox.checked = !!item.checked;
+    checkbox.setAttribute('aria-label', item.text ? `Mark "${item.text}" as done` : 'Mark item as done');
+    checkbox.addEventListener('change', () => opts.onToggle(item));
 
     const text = document.createElement('input');
     text.type = 'text';
@@ -55,12 +58,14 @@ Studio.checklist = {
       btnUp.className = 'task-btn';
       btnUp.textContent = '↑';
       btnUp.title = 'Move up';
+      btnUp.setAttribute('aria-label', `Move "${item.text}" up`);
       btnUp.addEventListener('click', () => opts.onReorder(item, -1));
 
       const btnDown = document.createElement('button');
       btnDown.className = 'task-btn';
       btnDown.textContent = '↓';
       btnDown.title = 'Move down';
+      btnDown.setAttribute('aria-label', `Move "${item.text}" down`);
       btnDown.addEventListener('click', () => opts.onReorder(item, 1));
 
       main.appendChild(btnUp);
@@ -71,6 +76,8 @@ Studio.checklist = {
     expandBtn.className = 'checklist-expand-toggle';
     expandBtn.textContent = isExpanded ? '▾' : '▸';
     expandBtn.title = 'Notes';
+    expandBtn.setAttribute('aria-label', isExpanded ? 'Collapse notes' : 'Expand notes');
+    expandBtn.setAttribute('aria-expanded', String(isExpanded));
     expandBtn.addEventListener('click', () => {
       if (isExpanded) this.expandedIds.delete(item.id); else this.expandedIds.add(item.id);
       opts.rerender();
@@ -82,6 +89,7 @@ Studio.checklist = {
       btnDel.className = 'task-btn';
       btnDel.textContent = '✕';
       btnDel.title = 'Delete';
+      btnDel.setAttribute('aria-label', `Delete "${item.text}"`);
       btnDel.addEventListener('click', () => opts.onDelete(item));
       main.appendChild(btnDel);
     }
@@ -119,8 +127,12 @@ Studio.checklist = {
     const main = document.createElement('div');
     main.className = 'checklist-row-main';
 
-    const checkbox = document.createElement('div');
-    checkbox.className = 'task-checkbox task-checkbox-disabled';
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.className = 'task-checkbox';
+    checkbox.disabled = true;
+    checkbox.setAttribute('aria-hidden', 'true');
+    checkbox.tabIndex = -1;
 
     const text = document.createElement('input');
     text.type = 'text';

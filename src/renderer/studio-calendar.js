@@ -193,9 +193,12 @@ Studio.calendar = {
       const isChecked = entry.kind === 'task' ? entry.task.checked : entry.item.checked;
       const label = entry.kind === 'task' ? entry.task.text : entry.item.text;
 
-      const checkbox = document.createElement('div');
-      checkbox.className = 'task-checkbox' + (isChecked ? ' checked' : '');
-      checkbox.addEventListener('click', () => {
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'task-checkbox';
+      checkbox.checked = isChecked;
+      checkbox.setAttribute('aria-label', `Mark "${label}" as done`);
+      checkbox.addEventListener('change', () => {
         if (entry.kind === 'task') this.toggleTask(entry.ws.id, entry.goal.id, entry.task.id);
         else this.togglePlanItem(entry.dateId, entry.item.id);
       });

@@ -114,6 +114,8 @@ function createFoldersBoard({ boardId, treeEl, addFolderBtn, addShortcutBtn }) {
         chevron.className = 'folder-row-chevron';
         chevron.textContent = isExpanded ? '▾' : '▸';
         chevron.title = isExpanded ? 'Collapse' : 'Expand';
+        chevron.setAttribute('aria-label', (isExpanded ? 'Collapse ' : 'Expand ') + folder.name);
+        chevron.setAttribute('aria-expanded', String(isExpanded));
         chevron.addEventListener('click', () => {
           if (isExpanded) this.expanded.delete(folder.id); else this.expanded.add(folder.id);
           this.render();
@@ -136,18 +138,21 @@ function createFoldersBoard({ boardId, treeEl, addFolderBtn, addShortcutBtn }) {
         btnAddSubFolder.className = 'task-btn';
         btnAddSubFolder.textContent = '📁+';
         btnAddSubFolder.title = 'Add sub-folder';
+        btnAddSubFolder.setAttribute('aria-label', `Add sub-folder to "${folder.name}"`);
         btnAddSubFolder.addEventListener('click', () => this.addFolder(folder.id));
 
         const btnAddShortcutHere = document.createElement('button');
         btnAddShortcutHere.className = 'task-btn';
         btnAddShortcutHere.textContent = '🔗+';
         btnAddShortcutHere.title = 'Add shortcut here';
+        btnAddShortcutHere.setAttribute('aria-label', `Add shortcut to "${folder.name}"`);
         btnAddShortcutHere.addEventListener('click', () => this.addShortcut(folder.id));
 
         const btnDel = document.createElement('button');
         btnDel.className = 'task-btn';
         btnDel.textContent = '✕';
         btnDel.title = 'Delete folder';
+        btnDel.setAttribute('aria-label', `Delete folder "${folder.name}"`);
         btnDel.addEventListener('click', () => this.deleteFolder(folder.id));
 
         row.appendChild(chevron);
@@ -190,6 +195,7 @@ function createFoldersBoard({ boardId, treeEl, addFolderBtn, addShortcutBtn }) {
         btnDel.className = 'task-btn';
         btnDel.textContent = '✕';
         btnDel.title = 'Remove shortcut';
+        btnDel.setAttribute('aria-label', `Remove shortcut "${shortcut.name}"`);
         btnDel.addEventListener('click', () => this.deleteShortcut(shortcut.id));
 
         row.appendChild(icon);

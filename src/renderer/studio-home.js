@@ -58,9 +58,11 @@ Studio.home = {
       const row = document.createElement('div');
       row.className = 'home-task-row';
 
-      const checkbox = document.createElement('div');
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
       checkbox.className = 'task-checkbox';
-      checkbox.addEventListener('click', () => this.toggleTask(ws.id, goal.id, task.id));
+      checkbox.setAttribute('aria-label', `Mark "${task.text}" as done`);
+      checkbox.addEventListener('change', () => this.toggleTask(ws.id, goal.id, task.id));
 
       const tag = document.createElement('span');
       tag.className = 'home-task-workspace-tag';

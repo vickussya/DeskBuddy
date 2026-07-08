@@ -8,13 +8,15 @@ Studio.goals = {
   activeWorkspaceId: null,
   goalsByWorkspace: {},
   currentNotebookGoalId: null,
+  trash: [],
 
-  init(data) {
+  async init(data) {
     this.workspaces = data.workspaces || [];
     this.goalsByWorkspace = data.goalsByWorkspace || {};
     this.activeWorkspaceId = data.activeWorkspaceId && this.workspaces.some(w => w.id === data.activeWorkspaceId)
       ? data.activeWorkspaceId
       : (this.workspaces[0] ? this.workspaces[0].id : null);
+    this.trash = await window.api.getTrash();
 
     this.renderWorkspaceTabs();
     this.renderGoalsList();
@@ -59,6 +61,10 @@ Studio.goals = {
     document.getElementById('btn-delete-workspace').addEventListener('click', () => this.deleteWorkspace());
 
     document.getElementById('btn-close-goal-notebook').addEventListener('click', () => this.closeNotebook());
+
+    document.getElementById('btn-open-trash').addEventListener('click', () => this.openTrash());
+    document.getElementById('btn-close-trash').addEventListener('click', () => this.closeTrash());
+    document.getElementById('btn-empty-trash').addEventListener('click', () => this.emptyTrash());
   },
 
   renderWorkspaceTabs() {
@@ -111,9 +117,21 @@ Studio.goals = {
 
   deleteGoal(goalId) {
     const goals = this.goalsByWorkspace[this.activeWorkspaceId] || [];
+    const goal = goals.find(g => g.id === goalId);
+    if (!goal) return;
+    const ws = this.workspaces.find(w => w.id === this.activeWorkspaceId);
+    this.trash.unshift({
+      id: Date.now() + Math.random(),
+      kind: 'goal',
+      deletedAt: Date.now(),
+      workspaceId: this.activeWorkspaceId,
+      workspaceName: ws ? ws.name : this.activeWorkspaceId,
+      goal: JSON.parse(JSON.stringify(goal))
+    });
     this.goalsByWorkspace[this.activeWorkspaceId] = goals.filter(g => g.id !== goalId);
     if (this.currentNotebookGoalId === goalId) this.closeNotebook();
     this.persist();
+    this.persistTrash();
     this.renderGoalsList();
   },
 
@@ -192,6 +210,7 @@ Studio.goals = {
       btnDel.className = 'task-btn';
       btnDel.textContent = '✕';
       btnDel.title = 'Delete goal';
+      btnDel.setAttribute('aria-label', `Delete goal "${goal.title}"`);
       btnDel.addEventListener('click', () => this.deleteGoal(goal.id));
 
       header.appendChild(ring);
@@ -265,8 +284,20 @@ Studio.goals = {
         this.persist();
       },
       onDelete: (task) => {
+        const ws = this.workspaces.find(w => w.id === this.activeWorkspaceId);
+        this.trash.unshift({
+          id: Date.now() + Math.random(),
+          kind: 'task',
+          deletedAt: Date.now(),
+          workspaceId: this.activeWorkspaceId,
+          workspaceName: ws ? ws.name : this.activeWorkspaceId,
+          goalId: goal.id,
+          goalTitle: goal.title,
+          task: JSON.parse(JSON.stringify(task))
+        });
         goal.tasks = goal.tasks.filter(t => t.id !== task.id);
         this.persist();
+        this.persistTrash();
         this.renderNotebookChecklist();
       },
       onReorder: (task, dir) => {
@@ -297,7 +328,8 @@ Studio.goals = {
     const wrap = document.createElement('div');
     wrap.className = 'checklist-main-extras';
 
-    const stickerBadge = document.createElement('div');
+    const stickerBadge = document.createElement('button');
+    stickerBadge.type = 'button';
     stickerBadge.className = 'task-sticker-badge';
     stickerBadge.title = 'Sticker';
     const stickerSrc = task.stickerId ? Studio.stickers.getStickerSrc(task.stickerId) : null;
@@ -305,9 +337,11 @@ Studio.goals = {
       const img = document.createElement('img');
       img.src = stickerSrc;
       stickerBadge.appendChild(img);
+      stickerBadge.setAttribute('aria-label', 'Change sticker');
     } else {
       stickerBadge.classList.add('task-sticker-badge-empty');
       stickerBadge.textContent = '+';
+      stickerBadge.setAttribute('aria-label', 'Add sticker');
     }
     stickerBadge.addEventListener('click', () => {
       Studio.stickers.openPicker(stickerBadge, (stickerId) => {
@@ -321,6 +355,7 @@ Studio.goals = {
     btnFolders.className = 'task-btn';
     btnFolders.textContent = '📁';
     btnFolders.title = 'Folders for this task';
+    btnFolders.setAttribute('aria-label', `Folders for "${task.text}"`);
     btnFolders.addEventListener('click', () => Studio.folders.openForTask(task.id, task.text));
 
     wrap.appendChild(stickerBadge);
@@ -379,6 +414,127 @@ Studio.goals = {
       this.renderGoalsList();
       if (this.currentNotebookGoalId === goalId) this.renderNotebookChecklist();
     }
+  },
+
+  // ===== Trash =====
+  // Deleting a goal or a task never destroys it outright — it moves here
+  // first, so an accidental click on a delete button is always recoverable.
+
+  async persistTrash() {
+    await window.api.saveTrash(this.trash);
+  },
+
+  openTrash() {
+    document.getElementById('trash-modal').classList.remove('hidden');
+    this.renderTrash();
+  },
+
+  closeTrash() {
+    document.getElementById('trash-modal').classList.add('hidden');
+  },
+
+  renderTrash() {
+    const list = document.getElementById('trash-list');
+    list.innerHTML = '';
+
+    if (this.trash.length === 0) {
+      const el = document.createElement('div');
+      el.className = 'no-tasks';
+      el.textContent = 'Trash is empty.';
+      list.appendChild(el);
+      return;
+    }
+
+    this.trash.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'trash-row';
+
+      const icon = document.createElement('span');
+      icon.className = 'trash-row-icon';
+      icon.textContent = entry.kind === 'goal' ? '🎯' : '☑';
+
+      const info = document.createElement('div');
+      info.className = 'trash-row-info';
+      const title = document.createElement('div');
+      title.className = 'trash-row-title';
+      title.textContent = entry.kind === 'goal' ? entry.goal.title : entry.task.text;
+      const meta = document.createElement('div');
+      meta.className = 'trash-row-meta';
+      const when = new Date(entry.deletedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+      meta.textContent = entry.kind === 'goal'
+        ? `Goal · ${entry.workspaceName} · deleted ${when}`
+        : `Task in "${entry.goalTitle}" · ${entry.workspaceName} · deleted ${when}`;
+      info.appendChild(title);
+      info.appendChild(meta);
+
+      const btnRestore = document.createElement('button');
+      btnRestore.className = 'text-btn';
+      btnRestore.textContent = 'Restore';
+      btnRestore.addEventListener('click', () => this.restoreTrashItem(entry.id));
+
+      const btnForever = document.createElement('button');
+      btnForever.className = 'text-btn danger';
+      btnForever.textContent = 'Delete forever';
+      btnForever.addEventListener('click', () => this.deleteForever(entry.id));
+
+      row.appendChild(icon);
+      row.appendChild(info);
+      row.appendChild(btnRestore);
+      row.appendChild(btnForever);
+      list.appendChild(row);
+    });
+  },
+
+  restoreTrashItem(trashId) {
+    const entry = this.trash.find(t => t.id === trashId);
+    if (!entry) return;
+
+    const wsExists = this.workspaces.some(w => w.id === entry.workspaceId);
+    if (!wsExists) {
+      alert(`"${entry.workspaceName}" no longer exists, so this can't be restored there.`);
+      return;
+    }
+
+    const goals = this.goalsByWorkspace[entry.workspaceId] || (this.goalsByWorkspace[entry.workspaceId] = []);
+
+    if (entry.kind === 'goal') {
+      goals.push(entry.goal);
+    } else {
+      let goal = goals.find(g => g.id === entry.goalId);
+      if (!goal) goal = goals.find(g => g.title === 'General') || goals[0];
+      if (!goal) {
+        alert('No goal left in that workspace to restore this task into.');
+        return;
+      }
+      goal.tasks.push(entry.task);
+    }
+
+    this.trash = this.trash.filter(t => t.id !== trashId);
+    window.api.saveGoals(entry.workspaceId, goals);
+    this.persistTrash();
+    this.renderTrash();
+    if (entry.workspaceId === this.activeWorkspaceId) {
+      this.renderGoalsList();
+      if (this.currentNotebookGoalId) this.renderNotebookChecklist();
+    }
+  },
+
+  deleteForever(trashId) {
+    const entry = this.trash.find(t => t.id === trashId);
+    if (!entry) return;
+    const label = entry.kind === 'goal' ? entry.goal.title : entry.task.text;
+    if (!confirm(`Permanently delete "${label}"? This cannot be undone.`)) return;
+    this.trash = this.trash.filter(t => t.id !== trashId);
+    this.persistTrash();
+    this.renderTrash();
+  },
+
+  emptyTrash() {
+    if (this.trash.length === 0) return;
+    if (!confirm(`Permanently delete all ${this.trash.length} item(s) in the trash? This cannot be undone.`)) return;
+    this.trash = [];
+    this.persistTrash();
+    this.renderTrash();
   },
 
   // ===== Workspaces =====

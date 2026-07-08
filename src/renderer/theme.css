@@ -21,35 +21,49 @@
 /* ===== Theme tokens =====
    Swapped per [data-theme] on <html>. Only "vivid" exists today;
    future themes (e.g. a retro Windows-98 skin) add another block here
-   without touching component CSS. */
+   without touching component CSS.
+
+   Redesign (Phase 15): warm neutral grayscale carries the interface;
+   the pink accent is spent only on primary actions, selection, and
+   small highlights — never as a large fill. Radius/shadow/motion
+   tokens added so components stop inventing their own one-off values. */
 
 :root,
 :root[data-theme="vivid"] {
-  --color-bg-primary: #fff4ef;
+  --color-bg-primary: #fbf8f6;
   --color-bg-elevated: #ffffff;
-  --color-sidebar-bg: #202020;
-  --color-sidebar-text: #ffffff;
-  --color-sidebar-text-muted: #a8a8a8;
-  --color-border: #f0b8d3;
-  --color-border-soft: #f9e6f0;
+  --color-bg-recessed: #f3eeec;
+  --color-sidebar-bg: #201c1e;
+  --color-sidebar-text: #f5efec;
+  --color-sidebar-text-muted: #9c8d91;
+  --color-border: #ddd4d0;
+  --color-border-soft: #eee8e5;
   --color-accent: #f4d4e6;
   --color-accent-strong: #cc498f;
   --color-accent-hover: #a83a72;
-  --color-text-primary: #202020;
-  --color-text-secondary: #6b5560;
-  --color-text-muted: #9c8a94;
-  --color-danger: #e63950;
+  --color-accent-ink: #7a2f58;
+  --color-text-primary: #201c1e;
+  --color-text-secondary: #6b6165;
+  --color-text-muted: #a89ea1;
 
-  /* per-section color blocks (Home cards) */
-  --color-card-tasks: #ffd166;
-  --color-card-goals: #a8e6cf;
-  --color-card-diary: #c3b8ff;
-  --color-card-calendar: #ffb4a2;
+  --color-danger: #c14a4a;
+  --color-danger-soft: #f6e2e2;
+  --color-warn: #c98a2e;
+  --color-warn-soft: #f6ecda;
+  --color-good: #4c8c6b;
+  --color-good-soft: #e2efe8;
+
+  /* per-section tint blocks (Home cards) — muted, not full-saturation */
+  --color-card-tasks: #f0dfb8;
+  --color-card-goals: #c9e5d6;
+  --color-card-diary: #d8d2f0;
+  --color-card-calendar: #f0cfc2;
 
   --font-family-base: 'Urbanist', 'Segoe UI', sans-serif;
+  --font-family-display: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
 
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
   --radius-lg: 16px;
   --radius-pill: 999px;
 
@@ -57,4 +71,22 @@
   --spacing-sm: 8px;
   --spacing-md: 14px;
   --spacing-lg: 22px;
+  --spacing-xl: 32px;
+
+  --shadow-1: 0 1px 2px rgba(32,28,30,0.06), 0 1px 1px rgba(32,28,30,0.04);
+  --shadow-2: 0 4px 12px rgba(32,28,30,0.08), 0 2px 4px rgba(32,28,30,0.05);
+  --shadow-3: 0 16px 40px rgba(32,28,30,0.16), 0 4px 12px rgba(32,28,30,0.08);
+
+  --ease-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --dur-micro: 150ms;
+  --dur-base: 200ms;
+  --dur-panel: 250ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
 }

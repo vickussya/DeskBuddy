@@ -409,13 +409,6 @@ h2 {
   display: none;
 }
 
-#task-add-row {
-  display: flex;
-  gap: 8px;
-  margin-bottom: var(--spacing-md);
-}
-
-#new-task-input,
 #new-workspace-input,
 #rename-workspace-input {
   flex: 1;
@@ -430,14 +423,12 @@ h2 {
   outline: none;
 }
 
-#new-task-input:focus,
 #new-workspace-input:focus,
 #rename-workspace-input:focus {
   border-color: var(--color-accent-strong);
   background: var(--color-accent);
 }
 
-#btn-add-task,
 #btn-confirm-add-workspace,
 #btn-confirm-rename-workspace {
   background: var(--color-accent-strong);
@@ -452,32 +443,9 @@ h2 {
   transition: background 0.12s;
 }
 
-#btn-add-task:hover,
 #btn-confirm-add-workspace:hover,
 #btn-confirm-rename-workspace:hover {
   background: var(--color-accent-hover);
-}
-
-#task-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  max-width: 900px;
-}
-
-.task-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--color-bg-elevated);
-  border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-md);
-  padding: 6px 10px;
-}
-
-.task-row-overdue {
-  background: #fdeaea;
-  border-color: var(--color-danger);
 }
 
 .task-date-input {
@@ -514,22 +482,6 @@ h2 {
   color: white;
   font-size: 11px;
   font-weight: bold;
-}
-
-.task-text-input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: 13px;
-  color: var(--color-text-primary);
-  font-family: inherit;
-}
-
-.task-text-input.crossed {
-  text-decoration: line-through;
-  color: var(--color-text-muted);
-  opacity: 0.75;
 }
 
 .task-btn {
@@ -698,52 +650,11 @@ h2 {
   font-size: 8px;
 }
 
-.milestone-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 3px 0 3px 14px;
-}
-
-.milestone-row .task-checkbox {
-  width: 15px;
-  height: 15px;
-}
-
-.milestone-text-input {
-  flex: 1;
-  background: none;
-  border: none;
-  outline: none;
-  font-size: 13px;
-  color: var(--color-text-primary);
-  font-family: inherit;
-}
-
-.milestone-text-input.crossed {
-  text-decoration: line-through;
-  color: var(--color-text-muted);
-  opacity: 0.75;
-}
-
-.goal-add-milestone-row {
-  display: flex;
-  gap: 6px;
-  padding-left: 14px;
-  margin-top: 4px;
-}
-
-.goal-add-milestone-row input {
-  flex: 1;
-  max-width: 300px;
-  font-family: inherit;
+.goal-card-summary {
   font-size: 12px;
-  padding: 4px 8px;
-  border: 1.5px solid var(--color-border-soft);
-  border-radius: var(--radius-sm);
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  outline: none;
+  color: var(--color-text-muted);
+  padding-left: 52px;
+  margin-bottom: 6px;
 }
 
 .goal-manual-progress {
@@ -976,14 +887,22 @@ h2 {
   color: var(--color-text-primary);
 }
 
-/* ===== Task Inspo modal ===== */
-#task-inspo-toolbar {
+/* ===== Goal notebook page (checklist + freeform canvas) ===== */
+#goal-notebook-checklist {
+  flex-shrink: 0;
+  max-height: 32vh;
+  overflow-y: auto;
+  border-bottom: 1.5px solid var(--color-border-soft);
+  padding-bottom: var(--spacing-sm);
+}
+
+#goal-notebook-canvas-toolbar {
   display: flex;
   gap: var(--spacing-sm);
   flex-shrink: 0;
 }
 
-#task-inspo-canvas {
+#goal-notebook-canvas {
   flex: 1;
   overflow: auto;
   border: 1.5px solid var(--color-border-soft);
@@ -992,15 +911,89 @@ h2 {
   position: relative;
 }
 
-#task-inspo-canvas.drop-active {
+#goal-notebook-canvas.drop-active {
   border-color: var(--color-accent-hover);
   box-shadow: inset 0 0 0 2px var(--color-accent-hover);
 }
 
-#task-inspo-canvas-inner {
+#goal-notebook-canvas-inner {
   position: relative;
   width: 3000px;
   height: 2000px;
+}
+
+/* ===== Shared bullet-journal checklist (Goals + Plan) ===== */
+.checklist-row {
+  border-bottom: 1px solid var(--color-border-soft);
+}
+
+.checklist-row-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 4px;
+}
+
+.checklist-text-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--color-text-primary);
+  font-family: inherit;
+}
+
+.checklist-text-input.crossed {
+  text-decoration: line-through;
+  color: var(--color-text-muted);
+  opacity: 0.75;
+}
+
+.checklist-expand-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--color-text-muted);
+  padding: 0 3px;
+}
+
+.checklist-row-expanded {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 4px 8px 33px;
+}
+
+.checklist-description-input {
+  width: 100%;
+  max-width: 500px;
+  min-height: 44px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  outline: none;
+}
+
+.checklist-extra-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checklist-draft-row .checklist-text-input {
+  color: var(--color-text-muted);
+}
+
+.task-checkbox-disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 /* ===== Calendar ===== */
@@ -1147,6 +1140,35 @@ h2 {
 #diary-textarea:focus {
   border-color: var(--color-accent-strong);
   background: var(--color-accent);
+}
+
+/* ===== Plan ===== */
+#plan-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+  flex-wrap: wrap;
+}
+
+#plan-date-input {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1.5px solid var(--color-border-soft);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-elevated);
+  color: var(--color-text-primary);
+}
+
+#plan-date-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-secondary);
+}
+
+#plan-checklist {
+  max-width: 700px;
 }
 
 /* ===== Diary stickers ===== */

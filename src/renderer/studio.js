@@ -6,12 +6,12 @@ async function init() {
 
   Studio.nav.init();
   await Studio.stickers.init();
-  Studio.tasks.init(data);
+  Studio.inspo.init();
   Studio.folders.init();
+  Studio.goals.init(data);
   Studio.home.init();
   Studio.diary.init();
-  Studio.goals.init();
-  Studio.inspo.init();
+  Studio.plan.init();
   Studio.calendar.init();
   Studio.settings.init(data);
 

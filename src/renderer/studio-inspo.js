@@ -305,7 +305,7 @@ function createInspoBoard({ boardId, canvasInnerEl, canvasEl, addNoteBtn, addDra
 
 Studio.inspo = {
   mainBoard: null,
-  taskBoard: null,
+  goalBoard: null,
 
   init() {
     this.mainBoard = createInspoBoard({
@@ -317,14 +317,12 @@ Studio.inspo = {
       addImageBtn: document.getElementById('btn-inspo-add-image')
     });
     this.mainBoard.init();
-
-    document.getElementById('btn-close-task-inspo').addEventListener('click', () => this.closeTaskBoard());
   },
 
-  // Re-opening the modal for a different task must not leave the previous
-  // task's board listening on the same shared toolbar/canvas elements
+  // Re-opening the canvas for a different goal must not leave the previous
+  // goal's board listening on the same shared toolbar/canvas elements
   // (they'd both react to clicks and one would silently write into the
-  // wrong task's board.json). Cloning+replacing drops all old listeners.
+  // wrong goal's board.json). Cloning+replacing drops all old listeners.
   freshEl(id) {
     const el = document.getElementById(id);
     const clone = el.cloneNode(true);
@@ -332,29 +330,25 @@ Studio.inspo = {
     return clone;
   },
 
-  openForTask(taskId, taskLabel) {
-    document.getElementById('task-inspo-modal-title').textContent = `Inspo — ${taskLabel}`;
-    document.getElementById('task-inspo-modal').classList.remove('hidden');
+  // Mounts a goal's freeform canvas into the goal notebook modal (owned by
+  // Studio.goals) — the checklist portion of that page is rendered
+  // separately by studio-goals.js; this only owns the sketch/photo canvas.
+  openForGoal(goalId) {
+    const canvasEl = this.freshEl('goal-notebook-canvas');
+    const canvasInnerEl = canvasEl.querySelector('#goal-notebook-canvas-inner');
 
-    // Clone-replace the canvas first (this also carries away the old
-    // #task-inspo-canvas-inner and any items rendered into it), then
-    // look the fresh inner element up from within the new clone.
-    const canvasEl = this.freshEl('task-inspo-canvas');
-    const canvasInnerEl = canvasEl.querySelector('#task-inspo-canvas-inner');
-
-    this.taskBoard = createInspoBoard({
-      boardId: String(taskId),
+    this.goalBoard = createInspoBoard({
+      boardId: String(goalId),
       canvasInnerEl,
       canvasEl,
-      addNoteBtn: this.freshEl('btn-task-inspo-add-note'),
-      addDrawingBtn: this.freshEl('btn-task-inspo-add-drawing'),
-      addImageBtn: this.freshEl('btn-task-inspo-add-image')
+      addNoteBtn: this.freshEl('btn-goal-notebook-add-note'),
+      addDrawingBtn: this.freshEl('btn-goal-notebook-add-drawing'),
+      addImageBtn: this.freshEl('btn-goal-notebook-add-image')
     });
-    this.taskBoard.init();
+    this.goalBoard.init();
   },
 
-  closeTaskBoard() {
-    document.getElementById('task-inspo-modal').classList.add('hidden');
-    this.taskBoard = null;
+  closeGoalBoard() {
+    this.goalBoard = null;
   }
 };

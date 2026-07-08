@@ -12,9 +12,9 @@
     <nav id="sidebar">
       <div id="sidebar-top">
         <button class="nav-btn active" data-section="home">Home</button>
-        <button class="nav-btn" data-section="tasks">Tasks</button>
-        <button class="nav-btn" data-section="diary">Diary</button>
         <button class="nav-btn" data-section="goals">Goals</button>
+        <button class="nav-btn" data-section="diary">Diary</button>
+        <button class="nav-btn" data-section="plan">Plan</button>
         <button class="nav-btn" data-section="inspo">Inspo</button>
       </div>
       <div id="sidebar-bottom">
@@ -55,9 +55,9 @@
         </div>
       </section>
 
-      <section class="panel" id="panel-tasks">
+      <section class="panel" id="panel-goals">
         <div id="tasks-subnav">
-          <button class="tasks-subnav-btn active" data-subview="tasks">Tasks</button>
+          <button class="tasks-subnav-btn active" data-subview="tasks">Goals</button>
           <button class="tasks-subnav-btn" data-subview="shortcuts">Shortcuts</button>
         </div>
 
@@ -73,15 +73,14 @@
             <button id="btn-cancel-add-workspace" class="text-btn">Cancel</button>
           </div>
 
-          <div id="task-add-row">
-            <input type="text" id="new-task-input" placeholder="Add a task..." maxlength="140" />
-            <button id="btn-add-task">Add</button>
+          <div id="goal-add-row">
+            <input type="text" id="new-goal-input" placeholder="Add a goal..." maxlength="140" />
+            <button id="btn-add-goal">Add</button>
           </div>
 
-          <div id="task-list"></div>
+          <div id="goals-list"></div>
 
           <div id="workspace-tools">
-            <button id="btn-open-tasks-file" class="text-btn">Open tasks file</button>
             <button id="btn-rename-workspace" class="text-btn">Rename workspace</button>
             <button id="btn-delete-workspace" class="text-btn danger">Delete workspace</button>
           </div>
@@ -118,12 +117,15 @@
         </div>
       </section>
 
-      <section class="panel" id="panel-goals">
-        <div id="goal-add-row">
-          <input type="text" id="new-goal-input" placeholder="Add a goal..." maxlength="140" />
-          <button id="btn-add-goal">Add</button>
+      <section class="panel" id="panel-plan">
+        <div id="plan-header">
+          <button id="btn-plan-prev" class="icon-action-btn" title="Previous day">‹ Prev</button>
+          <input type="date" id="plan-date-input" />
+          <button id="btn-plan-today" class="icon-action-btn">Today</button>
+          <button id="btn-plan-next" class="icon-action-btn" title="Next day">Next ›</button>
+          <span id="plan-date-label"></span>
         </div>
-        <div id="goals-list"></div>
+        <div id="plan-checklist"></div>
       </section>
 
       <section class="panel" id="panel-inspo">
@@ -215,19 +217,20 @@
     </main>
   </div>
 
-  <div id="task-inspo-modal" class="task-modal hidden">
+  <div id="goal-notebook-modal" class="task-modal hidden">
     <div class="task-modal-inner">
       <div class="task-modal-header">
-        <span id="task-inspo-modal-title" class="task-modal-title"></span>
-        <button id="btn-close-task-inspo" class="icon-action-btn">Close</button>
+        <span id="goal-notebook-modal-title" class="task-modal-title"></span>
+        <button id="btn-close-goal-notebook" class="icon-action-btn">Close</button>
       </div>
-      <div id="task-inspo-toolbar">
-        <button id="btn-task-inspo-add-note" class="icon-action-btn">+ Note</button>
-        <button id="btn-task-inspo-add-drawing" class="icon-action-btn">+ Draw</button>
-        <button id="btn-task-inspo-add-image" class="icon-action-btn">+ Image</button>
+      <div id="goal-notebook-checklist"></div>
+      <div id="goal-notebook-canvas-toolbar">
+        <button id="btn-goal-notebook-add-note" class="icon-action-btn">+ Note</button>
+        <button id="btn-goal-notebook-add-drawing" class="icon-action-btn">+ Draw</button>
+        <button id="btn-goal-notebook-add-image" class="icon-action-btn">+ Image</button>
       </div>
-      <div id="task-inspo-canvas">
-        <div id="task-inspo-canvas-inner"></div>
+      <div id="goal-notebook-canvas">
+        <div id="goal-notebook-canvas-inner"></div>
       </div>
     </div>
   </div>
@@ -248,12 +251,13 @@
 
   <script src="studio-nav.js"></script>
   <script src="studio-stickers.js"></script>
-  <script src="studio-tasks.js"></script>
+  <script src="studio-checklist.js"></script>
   <script src="studio-folders.js"></script>
+  <script src="studio-inspo.js"></script>
+  <script src="studio-goals.js"></script>
   <script src="studio-home.js"></script>
   <script src="studio-diary.js"></script>
-  <script src="studio-goals.js"></script>
-  <script src="studio-inspo.js"></script>
+  <script src="studio-plan.js"></script>
   <script src="studio-calendar.js"></script>
   <script src="studio-settings.js"></script>
   <script src="studio.js"></script>

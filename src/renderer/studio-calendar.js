@@ -66,13 +66,20 @@ Studio.calendar = {
 
   buildTasksByDate() {
     const map = {};
-    (Studio.tasks.workspaces || []).forEach(ws => {
-      const tasks = Studio.tasks.tasksByWorkspace[ws.id] || [];
-      tasks.forEach(task => {
-        if (task.dueDate) {
-          if (!map[task.dueDate]) map[task.dueDate] = [];
-          map[task.dueDate].push({ ws, task });
-        }
+    (Studio.goals.workspaces || []).forEach(ws => {
+      const goals = Studio.goals.goalsByWorkspace[ws.id] || [];
+      goals.forEach(goal => {
+        goal.tasks.forEach(task => {
+          if (!task.startDate || !task.endDate) return;
+          const cursor = this.parseDateId(task.startDate);
+          const end = this.parseDateId(task.endDate);
+          while (cursor <= end) {
+            const dateId = this.formatDateId(cursor);
+            if (!map[dateId]) map[dateId] = [];
+            map[dateId].push({ ws, goal, task });
+            cursor.setDate(cursor.getDate() + 1);
+          }
+        });
       });
     });
     return map;
@@ -153,16 +160,13 @@ Studio.calendar = {
       return;
     }
 
-    entries.forEach(({ ws, task }) => {
-      const checked = Studio.tasks.checkedByWorkspace[ws.id] || [];
-      const isChecked = checked.includes(task.id);
-
+    entries.forEach(({ ws, goal, task }) => {
       const row = document.createElement('div');
       row.className = 'home-task-row';
 
       const checkbox = document.createElement('div');
-      checkbox.className = 'task-checkbox' + (isChecked ? ' checked' : '');
-      checkbox.addEventListener('click', () => this.toggleTask(ws.id, task.id));
+      checkbox.className = 'task-checkbox' + (task.checked ? ' checked' : '');
+      checkbox.addEventListener('click', () => this.toggleTask(ws.id, goal.id, task.id));
 
       const tag = document.createElement('span');
       tag.className = 'home-task-workspace-tag';
@@ -171,7 +175,7 @@ Studio.calendar = {
       const text = document.createElement('span');
       text.className = 'home-task-text';
       text.textContent = task.text;
-      if (isChecked) text.style.textDecoration = 'line-through';
+      if (task.checked) text.style.textDecoration = 'line-through';
 
       row.appendChild(checkbox);
       row.appendChild(tag);
@@ -180,11 +184,8 @@ Studio.calendar = {
     });
   },
 
-  async toggleTask(workspaceId, taskId) {
-    const checked = Studio.tasks.checkedByWorkspace[workspaceId] || [];
-    const updated = checked.includes(taskId) ? checked.filter(id => id !== taskId) : [...checked, taskId];
-    Studio.tasks.checkedByWorkspace[workspaceId] = updated;
-    await window.api.setChecked(workspaceId, updated);
+  async toggleTask(workspaceId, goalId, taskId) {
+    await Studio.goals.toggleTaskChecked(workspaceId, goalId, taskId);
     this.render();
   }
 };

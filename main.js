@@ -1,7 +1,6 @@
 const { app, BrowserWindow, Tray, Menu, ipcMain, shell, dialog, nativeImage, screen, Notification } = require('electron');
 const path = require('path');
 const fs = require('fs');
-const chokidar = require('chokidar');
 
 // Force English regardless of the OS locale — affects native form controls
 // (e.g. <input type="date">) that JS date formatting can't override on its own.
@@ -53,16 +52,12 @@ class JsonStore {
 // --- Store setup (deferred until app is ready so getPath works) ---
 let store = null;
 let userDataPath = null;
-let tasksDir = null;
-let archivedTasksDir = null;
 let diaryDir = null;
 let inspoDir = null;
 let inspoMediaDir = null;
 
 function initStore() {
   userDataPath = app.getPath('userData');
-  tasksDir = path.join(userDataPath, 'tasks');
-  archivedTasksDir = path.join(tasksDir, '.archived');
   diaryDir = path.join(userDataPath, 'diary');
   inspoDir = path.join(userDataPath, 'inspo');
   inspoMediaDir = path.join(inspoDir, 'media');
@@ -83,9 +78,10 @@ function initStore() {
     },
     schedule: [],
     studioWindowBounds: null,
-    goals: []
+    goals: [],
+    goalsByWorkspace: {},
+    plansByDate: {}
   });
-  if (!fs.existsSync(tasksDir)) fs.mkdirSync(tasksDir, { recursive: true });
   if (!fs.existsSync(diaryDir)) fs.mkdirSync(diaryDir, { recursive: true });
   if (!fs.existsSync(inspoMediaDir)) fs.mkdirSync(inspoMediaDir, { recursive: true });
 }
@@ -96,7 +92,7 @@ function getDiaryFilePath(dateId) {
 
 function getInspoDirs(boardId) {
   if (!boardId) return { dir: inspoDir, mediaDir: inspoMediaDir };
-  const dir = path.join(inspoDir, 'tasks', boardId);
+  const dir = path.join(inspoDir, 'goals', boardId);
   return { dir, mediaDir: path.join(dir, 'media') };
 }
 
@@ -170,78 +166,65 @@ function migrateLegacyDataIfNeeded() {
   store.set('schemaVersion', 2);
 }
 
+// --- One-time migration: tasks move inside goals (Workspace -> Goal -> Task) ---
+function migrateGoalsIntoWorkspacesIfNeeded() {
+  if (store.get('schemaVersion') === 3) return;
+
+  const workspaces = store.get('workspaces', []);
+  const tasksByWorkspace = store.get('tasksByWorkspace', {});
+  const checkedByWorkspace = store.get('checkedByWorkspace', {});
+  const goalsByWorkspace = store.get('goalsByWorkspace', {});
+
+  for (const ws of workspaces) {
+    if (goalsByWorkspace[ws.id]) continue; // already migrated
+    const oldTasks = tasksByWorkspace[ws.id] || [];
+    const checkedIds = checkedByWorkspace[ws.id] || [];
+    const generalTasks = oldTasks.map(t => ({
+      id: t.id,
+      text: t.text,
+      checked: checkedIds.includes(t.id),
+      description: '',
+      startDate: t.dueDate || null,
+      endDate: t.dueDate || null,
+      stickerId: t.stickerId || null
+    }));
+    goalsByWorkspace[ws.id] = [
+      { id: `general-${ws.id}`, title: 'General', manualProgress: 0, tasks: generalTasks }
+    ];
+  }
+
+  // Fold the old flat goals list (with milestones) into the active workspace.
+  const flatGoals = store.get('goals', []);
+  const targetWsId = store.get('activeWorkspaceId') || (workspaces[0] && workspaces[0].id);
+  if (flatGoals.length > 0 && targetWsId && goalsByWorkspace[targetWsId]) {
+    flatGoals.forEach(g => {
+      goalsByWorkspace[targetWsId].push({
+        id: g.id,
+        title: g.title,
+        manualProgress: g.manualProgress || 0,
+        tasks: (g.milestones || []).map(m => ({
+          id: m.id,
+          text: m.text,
+          checked: !!m.done,
+          description: '',
+          startDate: null,
+          endDate: null,
+          stickerId: null
+        }))
+      });
+    });
+  }
+
+  store.set('goalsByWorkspace', goalsByWorkspace);
+  store.set('schemaVersion', 3);
+}
+
 let iconWindow = null;
 let studioWindow = null;
 let tray = null;
-const fileWatchers = new Map();
-const ignoreNextChange = new Set();
 
 const ICON_W = 80, ICON_H = 88, ICON_MARGIN = 16;
 const STUDIO_W = 900, STUDIO_H = 650, STUDIO_MIN_W = 720, STUDIO_MIN_H = 480;
-
-// --- Per-workspace task files ---
-function getTasksFilePath(id) {
-  return path.join(tasksDir, `${id}.txt`);
-}
-
-function ensureTasksFile(id) {
-  const filePath = getTasksFilePath(id);
-  if (!fs.existsSync(filePath)) {
-    const tasks = store.get(`tasksByWorkspace.${id}`, []);
-    const content = tasks.map(t => t.text).join('\n');
-    fs.writeFileSync(filePath, content, 'utf8');
-  }
-}
-
-function loadTasksFromFile(id) {
-  try {
-    const content = fs.readFileSync(getTasksFilePath(id), 'utf8');
-    const lines = content.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-    const existingTasks = store.get(`tasksByWorkspace.${id}`, []);
-    const newTasks = lines.map((text, i) => {
-      const existing = existingTasks.find(t => t.text === text);
-      return { ...(existing || {}), id: existing ? existing.id : Date.now() + i, text };
-    });
-    store.set(`tasksByWorkspace.${id}`, newTasks);
-    const checked = store.get(`checkedByWorkspace.${id}`, []);
-    const validIds = newTasks.map(t => t.id);
-    store.set(`checkedByWorkspace.${id}`, checked.filter(cid => validIds.includes(cid)));
-    return newTasks;
-  } catch (e) {
-    return store.get(`tasksByWorkspace.${id}`, []);
-  }
-}
-
-function saveTasksToFile(id, tasks) {
-  const content = tasks.map(t => t.text).join('\n');
-  fs.writeFileSync(getTasksFilePath(id), content, 'utf8');
-}
-
-function startWatcherForWorkspace(id) {
-  if (fileWatchers.has(id)) return;
-  ensureTasksFile(id);
-  const watcher = chokidar.watch(getTasksFilePath(id), {
-    persistent: true,
-    ignoreInitial: true,
-    awaitWriteFinish: { stabilityThreshold: 300, pollInterval: 100 }
-  });
-  watcher.on('change', () => {
-    if (ignoreNextChange.has(id)) { ignoreNextChange.delete(id); return; }
-    const tasks = loadTasksFromFile(id);
-    if (studioWindow && !studioWindow.isDestroyed()) {
-      studioWindow.webContents.send('tasks-updated', { workspaceId: id, tasks });
-    }
-  });
-  fileWatchers.set(id, watcher);
-}
-
-function stopWatcherForWorkspace(id) {
-  const watcher = fileWatchers.get(id);
-  if (watcher) {
-    watcher.close();
-    fileWatchers.delete(id);
-  }
-}
 
 // --- Get active character based on schedule ---
 function getActiveCharacter() {
@@ -435,17 +418,11 @@ ipcMain.handle('get-icon-init-data', () => {
 
 ipcMain.handle('get-studio-init-data', () => {
   const workspaces = store.get('workspaces', []);
-  const tasksByWorkspace = {};
-  const checkedByWorkspace = {};
-  for (const ws of workspaces) {
-    tasksByWorkspace[ws.id] = store.get(`tasksByWorkspace.${ws.id}`, []);
-    checkedByWorkspace[ws.id] = store.get(`checkedByWorkspace.${ws.id}`, []);
-  }
+  const goalsByWorkspace = store.get('goalsByWorkspace', {});
   return {
     workspaces,
     activeWorkspaceId: store.get('activeWorkspaceId'),
-    tasksByWorkspace,
-    checkedByWorkspace,
+    goalsByWorkspace,
     settings: { ...store.get('settings'), autoStart: getAutoStartStatus() },
     schedule: store.get('schedule', [])
   };
@@ -457,9 +434,9 @@ ipcMain.handle('create-workspace', (_, name) => {
   const ws = { id, name: name.trim() };
   workspaces.push(ws);
   store.set('workspaces', workspaces);
-  store.set(`tasksByWorkspace.${id}`, []);
-  store.set(`checkedByWorkspace.${id}`, []);
-  startWatcherForWorkspace(id);
+  store.set(`goalsByWorkspace.${id}`, [
+    { id: `general-${id}`, title: 'General', manualProgress: 0, tasks: [] }
+  ]);
   return ws;
 });
 
@@ -477,22 +454,9 @@ ipcMain.handle('delete-workspace', (_, id) => {
   const workspaces = store.get('workspaces', []).filter(w => w.id !== id);
   store.set('workspaces', workspaces);
 
-  stopWatcherForWorkspace(id);
-
-  const tasksByWorkspace = store.get('tasksByWorkspace', {});
-  delete tasksByWorkspace[id];
-  store.set('tasksByWorkspace', tasksByWorkspace);
-
-  const checkedByWorkspace = store.get('checkedByWorkspace', {});
-  delete checkedByWorkspace[id];
-  store.set('checkedByWorkspace', checkedByWorkspace);
-
-  const filePath = getTasksFilePath(id);
-  if (fs.existsSync(filePath)) {
-    if (!fs.existsSync(archivedTasksDir)) fs.mkdirSync(archivedTasksDir, { recursive: true });
-    const archivedPath = path.join(archivedTasksDir, `${id}-${Date.now()}.txt`);
-    fs.renameSync(filePath, archivedPath);
-  }
+  const goalsByWorkspace = store.get('goalsByWorkspace', {});
+  delete goalsByWorkspace[id];
+  store.set('goalsByWorkspace', goalsByWorkspace);
 
   if (store.get('activeWorkspaceId') === id) {
     store.set('activeWorkspaceId', workspaces.length > 0 ? workspaces[0].id : null);
@@ -506,39 +470,21 @@ ipcMain.handle('set-active-workspace', (_, id) => {
   return true;
 });
 
-ipcMain.handle('get-tasks', (_, workspaceId) => {
-  return {
-    tasks: store.get(`tasksByWorkspace.${workspaceId}`, []),
-    checkedTasks: store.get(`checkedByWorkspace.${workspaceId}`, [])
-  };
+ipcMain.handle('get-goals', (_, workspaceId) => {
+  return store.get(`goalsByWorkspace.${workspaceId}`, []);
 });
 
-ipcMain.handle('save-tasks', (_, workspaceId, tasks) => {
-  store.set(`tasksByWorkspace.${workspaceId}`, tasks);
-  ignoreNextChange.add(workspaceId);
-  saveTasksToFile(workspaceId, tasks);
-  if (studioWindow && !studioWindow.isDestroyed()) {
-    studioWindow.webContents.send('tasks-updated', { workspaceId, tasks });
-  }
+ipcMain.handle('save-goals', (_, workspaceId, goals) => {
+  store.set(`goalsByWorkspace.${workspaceId}`, goals);
   return true;
 });
 
-ipcMain.handle('set-checked', (_, workspaceId, checkedIds) => {
-  store.set(`checkedByWorkspace.${workspaceId}`, checkedIds);
-  return true;
+ipcMain.handle('get-plan-items', (_, dateId) => {
+  return store.get(`plansByDate.${dateId}`, []);
 });
 
-ipcMain.handle('open-tasks-file', (_, workspaceId) => {
-  shell.openPath(getTasksFilePath(workspaceId));
-  return true;
-});
-
-ipcMain.handle('get-goals', () => {
-  return store.get('goals', []);
-});
-
-ipcMain.handle('save-goals', (_, goals) => {
-  store.set('goals', goals);
+ipcMain.handle('save-plan-items', (_, dateId, items) => {
+  store.set(`plansByDate.${dateId}`, items);
   return true;
 });
 
@@ -771,11 +717,12 @@ function checkDeadlinesAndNotify() {
   const workspaces = store.get('workspaces', []);
   const dueTasks = [];
   for (const ws of workspaces) {
-    const tasks = store.get(`tasksByWorkspace.${ws.id}`, []);
-    const checked = store.get(`checkedByWorkspace.${ws.id}`, []);
-    for (const task of tasks) {
-      if (task.dueDate && task.dueDate <= todayId && !checked.includes(task.id)) {
-        dueTasks.push(task);
+    const goals = store.get(`goalsByWorkspace.${ws.id}`, []);
+    for (const goal of goals) {
+      for (const task of goal.tasks) {
+        if (task.endDate && task.endDate <= todayId && !task.checked) {
+          dueTasks.push(task);
+        }
       }
     }
   }
@@ -803,13 +750,9 @@ function checkDeadlinesAndNotify() {
 app.on('ready', () => {
   initStore();
   migrateLegacyDataIfNeeded();
+  migrateGoalsIntoWorkspacesIfNeeded();
   setupIPC();
   createTray();
-
-  const workspaces = store.get('workspaces', []);
-  for (const ws of workspaces) {
-    startWatcherForWorkspace(ws.id);
-  }
 
   if (store.get('settings.iconWindowVisible', true)) {
     createIconWindow();
@@ -824,9 +767,6 @@ app.on('window-all-closed', (e) => {
 });
 
 app.on('before-quit', () => {
-  for (const watcher of fileWatchers.values()) watcher.close();
-  fileWatchers.clear();
-
   if (studioWindow) {
     studioWindow.removeAllListeners('close');
     studioWindow.destroy();

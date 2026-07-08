@@ -1,7 +1,6 @@
 window.Studio = window.Studio || {};
 
 Studio.home = {
-  goals: [],
   diaryDateId: null,
   diaryText: '',
   diarySaveTimer: null,
@@ -25,8 +24,6 @@ Studio.home = {
 
   async refresh() {
     this.renderTasks();
-
-    this.goals = await window.api.getGoals();
     this.renderGoals();
 
     this.diaryDateId = this.formatDateId(new Date());
@@ -38,13 +35,14 @@ Studio.home = {
     const list = document.getElementById('home-task-list');
     list.innerHTML = '';
 
-    const workspaces = Studio.tasks.workspaces || [];
+    const workspaces = Studio.goals.workspaces || [];
     const rows = [];
     workspaces.forEach(ws => {
-      const tasks = Studio.tasks.tasksByWorkspace[ws.id] || [];
-      const checked = Studio.tasks.checkedByWorkspace[ws.id] || [];
-      tasks.forEach(task => {
-        if (!checked.includes(task.id)) rows.push({ ws, task });
+      const goals = Studio.goals.goalsByWorkspace[ws.id] || [];
+      goals.forEach(goal => {
+        goal.tasks.forEach(task => {
+          if (!task.checked) rows.push({ ws, goal, task });
+        });
       });
     });
 
@@ -56,13 +54,13 @@ Studio.home = {
       return;
     }
 
-    rows.forEach(({ ws, task }) => {
+    rows.forEach(({ ws, goal, task }) => {
       const row = document.createElement('div');
       row.className = 'home-task-row';
 
       const checkbox = document.createElement('div');
       checkbox.className = 'task-checkbox';
-      checkbox.addEventListener('click', () => this.toggleTask(ws.id, task.id));
+      checkbox.addEventListener('click', () => this.toggleTask(ws.id, goal.id, task.id));
 
       const tag = document.createElement('span');
       tag.className = 'home-task-workspace-tag';
@@ -79,11 +77,8 @@ Studio.home = {
     });
   },
 
-  async toggleTask(workspaceId, taskId) {
-    const checked = Studio.tasks.checkedByWorkspace[workspaceId] || [];
-    const updated = checked.includes(taskId) ? checked.filter(id => id !== taskId) : [...checked, taskId];
-    Studio.tasks.checkedByWorkspace[workspaceId] = updated;
-    await window.api.setChecked(workspaceId, updated);
+  async toggleTask(workspaceId, goalId, taskId) {
+    await Studio.goals.toggleTaskChecked(workspaceId, goalId, taskId);
     this.renderTasks();
   },
 
@@ -91,7 +86,13 @@ Studio.home = {
     const list = document.getElementById('home-goals-list');
     list.innerHTML = '';
 
-    if (this.goals.length === 0) {
+    const workspaces = Studio.goals.workspaces || [];
+    const rows = [];
+    workspaces.forEach(ws => {
+      (Studio.goals.goalsByWorkspace[ws.id] || []).forEach(goal => rows.push({ ws, goal }));
+    });
+
+    if (rows.length === 0) {
       const el = document.createElement('div');
       el.className = 'no-tasks';
       el.textContent = 'No goals yet.';
@@ -99,12 +100,15 @@ Studio.home = {
       return;
     }
 
-    this.goals.forEach(goal => {
+    rows.forEach(({ ws, goal }) => {
       const progress = Studio.goals.computeProgress(goal);
 
       const row = document.createElement('div');
       row.className = 'home-goal-row';
-      row.addEventListener('click', () => Studio.nav.switchSection('goals'));
+      row.addEventListener('click', () => {
+        Studio.goals.switchWorkspace(ws.id);
+        Studio.nav.switchSection('goals');
+      });
 
       const ring = document.createElement('div');
       ring.className = 'progress-ring progress-ring--sm';
@@ -114,11 +118,16 @@ Studio.home = {
       ringLabel.textContent = `${progress}%`;
       ring.appendChild(ringLabel);
 
+      const tag = document.createElement('span');
+      tag.className = 'home-task-workspace-tag';
+      tag.textContent = ws.name;
+
       const title = document.createElement('div');
       title.className = 'home-goal-title';
       title.textContent = goal.title;
 
       row.appendChild(ring);
+      row.appendChild(tag);
       row.appendChild(title);
       list.appendChild(row);
     });

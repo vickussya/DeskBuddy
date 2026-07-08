@@ -14,6 +14,7 @@ async function init() {
   Studio.plan.init();
   Studio.calendar.init();
   Studio.settings.init(data);
+  Studio.command.init();
 
   window.api.onNavigateToSection((section) => Studio.nav.switchSection(section));
 }

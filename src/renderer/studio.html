@@ -11,6 +11,10 @@
   <div id="studio-app">
     <nav id="sidebar">
       <div id="sidebar-top">
+        <div id="sidebar-tools">
+          <button id="btn-open-search" class="sidebar-tool-btn" title="Search (Ctrl+K)" aria-label="Search everything">🔍 Search</button>
+          <button id="btn-open-quick-capture" class="sidebar-tool-btn" title="Quick add (Ctrl+N)" aria-label="Quick add a task">＋ Quick add</button>
+        </div>
         <button class="nav-btn active" data-section="home">Home</button>
         <button class="nav-btn" data-section="goals">Goals</button>
         <button class="nav-btn" data-section="diary">Diary</button>
@@ -225,8 +229,12 @@
 
   <div id="goal-notebook-modal" class="task-modal hidden">
     <div class="task-modal-inner">
+      <div id="goal-notebook-breadcrumb" class="breadcrumb"></div>
       <div class="task-modal-header">
-        <span id="goal-notebook-modal-title" class="task-modal-title"></span>
+        <span class="task-modal-title-row">
+          <button id="btn-goal-notebook-favorite" class="task-btn goal-favorite-btn" title="Pin to top">☆</button>
+          <span id="goal-notebook-modal-title" class="task-modal-title"></span>
+        </span>
         <button id="btn-close-goal-notebook" class="icon-action-btn">Close</button>
       </div>
       <div id="goal-notebook-checklist"></div>
@@ -268,6 +276,29 @@
     </div>
   </div>
 
+  <div id="search-modal" class="task-modal hidden">
+    <div class="task-modal-inner search-modal-inner">
+      <input type="text" id="search-input" class="search-input" placeholder="Search goals, tasks, plan, diary..." />
+      <div id="search-results"></div>
+      <div class="search-hint">↑↓ to navigate · Enter to open · Esc to close</div>
+    </div>
+  </div>
+
+  <div id="quick-capture-modal" class="task-modal hidden">
+    <div class="task-modal-inner quick-capture-inner">
+      <div class="modal-title">Quick Capture</div>
+      <input type="text" id="quick-capture-input" class="search-input" placeholder="What needs doing?" maxlength="140" />
+      <label class="field-label" for="quick-capture-goal-select">Add to</label>
+      <select id="quick-capture-goal-select" class="field-input"></select>
+      <div class="quick-capture-actions">
+        <span class="search-hint">Esc to close</span>
+        <button id="btn-quick-capture-submit" class="btn-primary-pill">Add — Enter</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
   <script src="studio-nav.js"></script>
   <script src="studio-stickers.js"></script>
   <script src="studio-checklist.js"></script>
@@ -279,6 +310,7 @@
   <script src="studio-plan.js"></script>
   <script src="studio-calendar.js"></script>
   <script src="studio-settings.js"></script>
+  <script src="studio-command.js"></script>
   <script src="studio.js"></script>
 </body>
 </html>

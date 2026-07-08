@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('api', {
 
   getTrash: () => ipcRenderer.invoke('get-trash'),
   saveTrash: (trash) => ipcRenderer.invoke('save-trash', trash),
+  globalSearch: (query) => ipcRenderer.invoke('global-search', query),
 
   getCalendarDecor: (dateId) => ipcRenderer.invoke('get-calendar-decor', dateId),
   saveCalendarDecor: (dateId, items) => ipcRenderer.invoke('save-calendar-decor', dateId, items),

@@ -506,6 +506,53 @@ ipcMain.handle('save-trash', (_, trash) => {
   return true;
 });
 
+ipcMain.handle('global-search', (_, query) => {
+  const q = (query || '').trim().toLowerCase();
+  if (!q) return [];
+  const results = [];
+
+  const workspaces = store.get('workspaces', []);
+  const goalsByWorkspace = store.get('goalsByWorkspace', {});
+  for (const ws of workspaces) {
+    const goals = goalsByWorkspace[ws.id] || [];
+    for (const goal of goals) {
+      if (goal.title.toLowerCase().includes(q)) {
+        results.push({ type: 'goal', workspaceId: ws.id, workspaceName: ws.name, goalId: goal.id, goalTitle: goal.title });
+      }
+      for (const task of goal.tasks) {
+        if (task.text.toLowerCase().includes(q)) {
+          results.push({ type: 'task', workspaceId: ws.id, workspaceName: ws.name, goalId: goal.id, goalTitle: goal.title, taskId: task.id, taskText: task.text });
+        }
+      }
+    }
+  }
+
+  const plansByDate = store.get('plansByDate', {});
+  for (const dateId of Object.keys(plansByDate)) {
+    for (const item of plansByDate[dateId]) {
+      if (item.text.toLowerCase().includes(q)) {
+        results.push({ type: 'plan', dateId, itemText: item.text });
+      }
+    }
+  }
+
+  try {
+    const files = fs.readdirSync(diaryDir).filter(f => f.endsWith('.txt'));
+    for (const f of files) {
+      const content = fs.readFileSync(path.join(diaryDir, f), 'utf8');
+      const idx = content.toLowerCase().indexOf(q);
+      if (idx !== -1) {
+        const dateId = f.replace(/\.txt$/, '');
+        const start = Math.max(0, idx - 30);
+        const snippet = (start > 0 ? '…' : '') + content.slice(start, idx + q.length + 30).trim() + '…';
+        results.push({ type: 'diary', dateId, snippet });
+      }
+    }
+  } catch {}
+
+  return results.slice(0, 30);
+});
+
 ipcMain.handle('get-calendar-decor', (_, dateId) => {
   return store.get(`calendarDecor.${dateId}`, []);
 });

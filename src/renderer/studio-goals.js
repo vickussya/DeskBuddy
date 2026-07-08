@@ -109,10 +109,19 @@ Studio.goals = {
     const title = input.value.trim();
     if (!title || !this.activeWorkspaceId) return;
     const goals = this.goalsByWorkspace[this.activeWorkspaceId] || (this.goalsByWorkspace[this.activeWorkspaceId] = []);
-    goals.push({ id: Date.now(), title, manualProgress: 0, tasks: [] });
+    goals.push({ id: Date.now(), title, manualProgress: 0, favorite: false, tasks: [] });
     input.value = '';
     this.persist();
     this.renderGoalsList();
+  },
+
+  toggleFavorite(goalId) {
+    const goal = (this.goalsByWorkspace[this.activeWorkspaceId] || []).find(g => g.id === goalId);
+    if (!goal) return;
+    goal.favorite = !goal.favorite;
+    this.persist();
+    this.renderGoalsList();
+    if (this.currentNotebookGoalId === goalId) this.updateNotebookHeader(goal);
   },
 
   deleteGoal(goalId) {
@@ -176,7 +185,9 @@ Studio.goals = {
       return;
     }
 
-    goals.forEach(goal => {
+    const sorted = [...goals].sort((a, b) => (b.favorite ? 1 : 0) - (a.favorite ? 1 : 0));
+
+    sorted.forEach(goal => {
       const progress = this.computeProgress(goal);
       const openCount = goal.tasks.filter(t => !t.checked).length;
 
@@ -206,6 +217,13 @@ Studio.goals = {
       titleInput.addEventListener('blur', () => this.renameGoal(goal.id, titleInput.value));
       titleInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') titleInput.blur(); });
 
+      const btnFav = document.createElement('button');
+      btnFav.className = 'task-btn goal-favorite-btn' + (goal.favorite ? ' active' : '');
+      btnFav.textContent = goal.favorite ? '★' : '☆';
+      btnFav.title = goal.favorite ? 'Unpin' : 'Pin to top';
+      btnFav.setAttribute('aria-label', (goal.favorite ? 'Unpin' : 'Pin') + ` "${goal.title}"`);
+      btnFav.addEventListener('click', () => this.toggleFavorite(goal.id));
+
       const btnDel = document.createElement('button');
       btnDel.className = 'task-btn';
       btnDel.textContent = '✕';
@@ -215,6 +233,7 @@ Studio.goals = {
 
       header.appendChild(ring);
       header.appendChild(titleInput);
+      header.appendChild(btnFav);
       header.appendChild(btnDel);
       card.appendChild(header);
 
@@ -249,10 +268,30 @@ Studio.goals = {
     const goal = (this.goalsByWorkspace[this.activeWorkspaceId] || []).find(g => g.id === goalId);
     if (!goal) return;
     this.currentNotebookGoalId = goalId;
-    document.getElementById('goal-notebook-modal-title').textContent = goal.title;
+    this.updateNotebookHeader(goal);
     document.getElementById('goal-notebook-modal').classList.remove('hidden');
     this.renderNotebookChecklist();
     Studio.inspo.openForGoal(goalId);
+  },
+
+  updateNotebookHeader(goal) {
+    const ws = this.workspaces.find(w => w.id === this.activeWorkspaceId);
+    const crumb = document.getElementById('goal-notebook-breadcrumb');
+    crumb.innerHTML = '';
+    const wsCrumb = document.createElement('button');
+    wsCrumb.className = 'breadcrumb-link';
+    wsCrumb.textContent = `Goals / ${ws ? ws.name : ''}`;
+    wsCrumb.addEventListener('click', () => this.closeNotebook());
+    crumb.appendChild(wsCrumb);
+
+    document.getElementById('goal-notebook-modal-title').textContent = goal.title;
+
+    const btnFav = document.getElementById('btn-goal-notebook-favorite');
+    btnFav.textContent = goal.favorite ? '★' : '☆';
+    btnFav.classList.toggle('active', !!goal.favorite);
+    btnFav.title = goal.favorite ? 'Unpin' : 'Pin to top';
+    btnFav.setAttribute('aria-label', (goal.favorite ? 'Unpin' : 'Pin') + ` "${goal.title}"`);
+    btnFav.onclick = () => this.toggleFavorite(goal.id);
   },
 
   closeNotebook() {

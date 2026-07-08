@@ -74,6 +74,7 @@
           <div id="tasks-header">
             <div id="workspace-tabs"></div>
             <button id="btn-add-workspace" class="icon-action-btn" title="Add workspace">+ Workspace</button>
+            <button id="btn-open-trash" class="icon-action-btn" title="Trash">🗑 Trash</button>
           </div>
 
           <div id="workspace-add-form" class="hidden">
@@ -92,7 +93,6 @@
           <div id="workspace-tools">
             <button id="btn-rename-workspace" class="text-btn">Rename workspace</button>
             <button id="btn-delete-workspace" class="text-btn danger">Delete workspace</button>
-            <button id="btn-open-trash" class="text-btn">🗑 Trash</button>
           </div>
 
           <div id="workspace-rename-form" class="hidden">
@@ -290,6 +290,7 @@
       <input type="text" id="quick-capture-input" class="search-input" placeholder="What needs doing?" maxlength="140" />
       <label class="field-label" for="quick-capture-goal-select">Add to</label>
       <select id="quick-capture-goal-select" class="field-input"></select>
+      <div id="quick-capture-empty-hint" class="hint-text hidden">You don't have any goals yet — open Goals and add one first.</div>
       <div class="quick-capture-actions">
         <span class="search-hint">Esc to close</span>
         <button id="btn-quick-capture-submit" class="btn-primary-pill">Add — Enter</button>

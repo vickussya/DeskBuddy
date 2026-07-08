@@ -184,9 +184,16 @@ Studio.command = {
     if (this.lastGoalKey && [...select.options].some(o => o.value === this.lastGoalKey)) {
       select.value = this.lastGoalKey;
     }
+
+    const hasGoals = select.options.length > 0;
+    document.getElementById('quick-capture-empty-hint').classList.toggle('hidden', hasGoals);
+    document.getElementById('quick-capture-input').disabled = !hasGoals;
+    select.disabled = !hasGoals;
+    document.getElementById('btn-quick-capture-submit').disabled = !hasGoals;
+
     document.getElementById('quick-capture-input').value = '';
     document.getElementById('quick-capture-modal').classList.remove('hidden');
-    setTimeout(() => document.getElementById('quick-capture-input').focus(), 50);
+    if (hasGoals) setTimeout(() => document.getElementById('quick-capture-input').focus(), 50);
   },
 
   closeQuickCapture() {
@@ -218,16 +225,35 @@ Studio.command = {
   },
 
   // ===== Toast =====
+  // action = { label, onClick } shows an inline button (e.g. "Undo") and
+  // gives the toast longer to sit on screen before it fades.
 
-  showToast(message) {
+  showToast(message, action) {
     const toast = document.createElement('div');
     toast.className = 'toast';
-    toast.textContent = message;
-    document.getElementById('toast-container').appendChild(toast);
-    requestAnimationFrame(() => toast.classList.add('visible'));
-    setTimeout(() => {
+
+    const text = document.createElement('span');
+    text.textContent = message;
+    toast.appendChild(text);
+
+    const dismiss = () => {
       toast.classList.remove('visible');
       setTimeout(() => toast.remove(), 250);
-    }, 2200);
+    };
+
+    if (action) {
+      const btn = document.createElement('button');
+      btn.className = 'toast-action';
+      btn.textContent = action.label;
+      btn.addEventListener('click', () => {
+        action.onClick();
+        dismiss();
+      });
+      toast.appendChild(btn);
+    }
+
+    document.getElementById('toast-container').appendChild(toast);
+    requestAnimationFrame(() => toast.classList.add('visible'));
+    setTimeout(dismiss, action ? 5000 : 2200);
   }
 };

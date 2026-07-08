@@ -1613,6 +1613,10 @@ h2 {
   margin-bottom: var(--spacing-sm);
 }
 
+.hint-text.hidden {
+  display: none;
+}
+
 .setting-row {
   display: flex;
   align-items: center;
@@ -1963,18 +1967,40 @@ h2 {
 }
 
 .toast {
+  display: flex;
+  align-items: center;
+  gap: 14px;
   background: var(--color-sidebar-bg);
   color: var(--color-sidebar-text);
   font-size: 13px;
-  padding: 10px 18px;
+  padding: 10px 12px 10px 18px;
   border-radius: var(--radius-pill);
   box-shadow: var(--shadow-3);
   opacity: 0;
   transform: translateY(8px);
   transition: opacity var(--dur-panel) var(--ease-out), transform var(--dur-panel) var(--ease-out);
+  pointer-events: auto;
 }
 
 .toast.visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+.toast-action {
+  background: rgba(255,255,255,0.14);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: 5px 14px;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background var(--dur-base) var(--ease-out);
+}
+
+.toast-action:hover {
+  background: var(--color-accent-strong);
 }

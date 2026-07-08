@@ -129,19 +129,21 @@ Studio.goals = {
     const goal = goals.find(g => g.id === goalId);
     if (!goal) return;
     const ws = this.workspaces.find(w => w.id === this.activeWorkspaceId);
-    this.trash.unshift({
+    const trashEntry = {
       id: Date.now() + Math.random(),
       kind: 'goal',
       deletedAt: Date.now(),
       workspaceId: this.activeWorkspaceId,
       workspaceName: ws ? ws.name : this.activeWorkspaceId,
       goal: JSON.parse(JSON.stringify(goal))
-    });
+    };
+    this.trash.unshift(trashEntry);
     this.goalsByWorkspace[this.activeWorkspaceId] = goals.filter(g => g.id !== goalId);
     if (this.currentNotebookGoalId === goalId) this.closeNotebook();
     this.persist();
     this.persistTrash();
     this.renderGoalsList();
+    Studio.command.showToast(`Deleted "${goal.title}"`, { label: 'Undo', onClick: () => this.restoreTrashItem(trashEntry.id) });
   },
 
   renameGoal(goalId, title) {
@@ -324,7 +326,7 @@ Studio.goals = {
       },
       onDelete: (task) => {
         const ws = this.workspaces.find(w => w.id === this.activeWorkspaceId);
-        this.trash.unshift({
+        const trashEntry = {
           id: Date.now() + Math.random(),
           kind: 'task',
           deletedAt: Date.now(),
@@ -333,11 +335,13 @@ Studio.goals = {
           goalId: goal.id,
           goalTitle: goal.title,
           task: JSON.parse(JSON.stringify(task))
-        });
+        };
+        this.trash.unshift(trashEntry);
         goal.tasks = goal.tasks.filter(t => t.id !== task.id);
         this.persist();
         this.persistTrash();
         this.renderNotebookChecklist();
+        Studio.command.showToast(`Deleted "${task.text}"`, { label: 'Undo', onClick: () => this.restoreTrashItem(trashEntry.id) });
       },
       onReorder: (task, dir) => {
         const i = goal.tasks.findIndex(t => t.id === task.id);

@@ -45,6 +45,11 @@ Studio.checklist = {
     main.appendChild(checkbox);
     main.appendChild(text);
 
+    if (opts.mainExtras) {
+      const extras = opts.mainExtras(item);
+      if (extras) main.appendChild(extras);
+    }
+
     if (opts.onReorder) {
       const btnUp = document.createElement('button');
       btnUp.className = 'task-btn';

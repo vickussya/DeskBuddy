@@ -3,8 +3,11 @@ window.Studio = window.Studio || {};
 Studio.calendar = {
   viewDate: null,
   selectedDateId: null,
+  plansByDate: {},
+  decorItems: [],
+  decorNextZ: 1,
 
-  init() {
+  async init() {
     this.viewDate = new Date();
     this.viewDate.setDate(1);
     this.selectedDateId = this.formatDateId(new Date());
@@ -13,10 +16,25 @@ Studio.calendar = {
     document.getElementById('btn-calendar-next').addEventListener('click', () => this.nextMonth());
     document.getElementById('btn-calendar-today').addEventListener('click', () => this.goToday());
 
+    const addStickerBtn = document.getElementById('btn-calendar-decor-add-sticker');
+    addStickerBtn.addEventListener('click', () => {
+      Studio.stickers.openPicker(addStickerBtn, (stickerId) => this.addDecorSticker(stickerId));
+    });
+    document.getElementById('btn-calendar-decor-add-photo').addEventListener('click', () => this.pickDecorPhotos());
+
+    const decorLayer = document.getElementById('calendar-decor-layer');
+    decorLayer.addEventListener('dragover', (e) => { e.preventDefault(); decorLayer.classList.add('drop-active'); });
+    decorLayer.addEventListener('dragleave', () => decorLayer.classList.remove('drop-active'));
+    decorLayer.addEventListener('drop', (e) => this.handleDecorDrop(e));
+
+    this.plansByDate = await window.api.getAllPlanItems();
+    await this.loadDecor(this.selectedDateId);
     this.render();
   },
 
-  refresh() {
+  async refresh() {
+    this.plansByDate = await window.api.getAllPlanItems();
+    await this.loadDecor(this.selectedDateId);
     this.render();
   },
 
@@ -42,15 +60,15 @@ Studio.calendar = {
     this.render();
   },
 
-  goToday() {
+  async goToday() {
     const today = new Date();
     this.viewDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    this.selectedDateId = this.formatDateId(today);
-    this.render();
+    await this.selectDay(this.formatDateId(today));
   },
 
-  selectDay(dateId) {
+  async selectDay(dateId) {
     this.selectedDateId = dateId;
+    await this.loadDecor(dateId);
     this.render();
   },
 
@@ -76,10 +94,17 @@ Studio.calendar = {
           while (cursor <= end) {
             const dateId = this.formatDateId(cursor);
             if (!map[dateId]) map[dateId] = [];
-            map[dateId].push({ ws, goal, task });
+            map[dateId].push({ kind: 'task', ws, goal, task });
             cursor.setDate(cursor.getDate() + 1);
           }
         });
+      });
+    });
+    Object.keys(this.plansByDate).forEach(dateId => {
+      const items = this.plansByDate[dateId] || [];
+      items.forEach(item => {
+        if (!map[dateId]) map[dateId] = [];
+        map[dateId].push({ kind: 'plan', dateId, item });
       });
     });
     return map;
@@ -135,6 +160,7 @@ Studio.calendar = {
     });
 
     this.renderDayDetail();
+    this.renderDecorLayer();
   },
 
   renderDayDetail() {
@@ -160,22 +186,28 @@ Studio.calendar = {
       return;
     }
 
-    entries.forEach(({ ws, goal, task }) => {
+    entries.forEach((entry) => {
       const row = document.createElement('div');
       row.className = 'home-task-row';
 
+      const isChecked = entry.kind === 'task' ? entry.task.checked : entry.item.checked;
+      const label = entry.kind === 'task' ? entry.task.text : entry.item.text;
+
       const checkbox = document.createElement('div');
-      checkbox.className = 'task-checkbox' + (task.checked ? ' checked' : '');
-      checkbox.addEventListener('click', () => this.toggleTask(ws.id, goal.id, task.id));
+      checkbox.className = 'task-checkbox' + (isChecked ? ' checked' : '');
+      checkbox.addEventListener('click', () => {
+        if (entry.kind === 'task') this.toggleTask(entry.ws.id, entry.goal.id, entry.task.id);
+        else this.togglePlanItem(entry.dateId, entry.item.id);
+      });
 
       const tag = document.createElement('span');
       tag.className = 'home-task-workspace-tag';
-      tag.textContent = ws.name;
+      tag.textContent = entry.kind === 'task' ? entry.ws.name : 'Plan';
 
       const text = document.createElement('span');
       text.className = 'home-task-text';
-      text.textContent = task.text;
-      if (task.checked) text.style.textDecoration = 'line-through';
+      text.textContent = label;
+      if (isChecked) text.style.textDecoration = 'line-through';
 
       row.appendChild(checkbox);
       row.appendChild(tag);
@@ -187,5 +219,190 @@ Studio.calendar = {
   async toggleTask(workspaceId, goalId, taskId) {
     await Studio.goals.toggleTaskChecked(workspaceId, goalId, taskId);
     this.render();
+  },
+
+  async togglePlanItem(dateId, itemId) {
+    const items = this.plansByDate[dateId] || [];
+    const item = items.find(i => i.id === itemId);
+    if (!item) return;
+    item.checked = !item.checked;
+    await window.api.savePlanItems(dateId, items);
+    this.render();
+  },
+
+  // ===== Day decoration (stickers + photos) =====
+
+  async loadDecor(dateId) {
+    this.decorItems = await window.api.getCalendarDecor(dateId);
+    this.decorNextZ = this.decorItems.reduce((max, i) => Math.max(max, i.z || 1), 1);
+  },
+
+  async saveDecor() {
+    await window.api.saveCalendarDecor(this.selectedDateId, this.decorItems);
+  },
+
+  nextDecorPosition() {
+    const step = (this.decorItems.length % 8) * 30;
+    return { x: 40 + step, y: 40 + step };
+  },
+
+  addDecorSticker(stickerId) {
+    if (!stickerId) return;
+    const { x, y } = this.nextDecorPosition();
+    this.decorItems.push({ id: Date.now() + Math.random(), kind: 'sticker', stickerId, x, y, w: 90, h: 90, rotation: 0, z: ++this.decorNextZ });
+    this.saveDecor();
+    this.renderDecorLayer();
+  },
+
+  addDecorPhoto(mediaPath) {
+    const { x, y } = this.nextDecorPosition();
+    this.decorItems.push({ id: Date.now() + Math.random(), kind: 'photo', mediaPath, x, y, w: 140, h: 140, rotation: 0, z: ++this.decorNextZ });
+    this.saveDecor();
+    this.renderDecorLayer();
+  },
+
+  async pickDecorPhotos() {
+    const paths = await window.api.pickCalendarPhotos();
+    paths.forEach(p => this.addDecorPhoto(p));
+  },
+
+  async handleDecorDrop(e) {
+    e.preventDefault();
+    document.getElementById('calendar-decor-layer').classList.remove('drop-active');
+    const files = [...e.dataTransfer.files].filter(f => f.type.startsWith('image/'));
+    for (const file of files) {
+      const destPath = await window.api.importCalendarPhoto(file.path);
+      this.addDecorPhoto(destPath);
+    }
+  },
+
+  deleteDecorItem(id) {
+    this.decorItems = this.decorItems.filter(i => i.id !== id);
+    this.saveDecor();
+    this.renderDecorLayer();
+  },
+
+  renderDecorLayer() {
+    const layer = document.getElementById('calendar-decor-layer');
+    layer.innerHTML = '';
+    this.decorItems.forEach(item => this.renderDecorItem(layer, item));
+  },
+
+  renderDecorItem(layer, item) {
+    const el = document.createElement('div');
+    el.className = 'calendar-decor-item';
+    el.style.left = item.x + 'px';
+    el.style.top = item.y + 'px';
+    el.style.width = item.w + 'px';
+    el.style.height = item.h + 'px';
+    el.style.zIndex = item.z;
+    el.style.transform = `rotate(${item.rotation || 0}deg)`;
+
+    const img = document.createElement('img');
+    img.src = item.kind === 'sticker'
+      ? Studio.stickers.getStickerSrc(item.stickerId)
+      : `file://${item.mediaPath.replace(/\\/g, '/')}`;
+    img.draggable = false;
+    el.appendChild(img);
+
+    const rotateHandle = document.createElement('div');
+    rotateHandle.className = 'calendar-decor-rotate-handle';
+    el.appendChild(rotateHandle);
+
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'calendar-decor-resize-handle';
+    el.appendChild(resizeHandle);
+
+    const deleteBtn = document.createElement('div');
+    deleteBtn.className = 'calendar-decor-delete';
+    deleteBtn.textContent = '✕';
+    deleteBtn.addEventListener('click', (e) => { e.stopPropagation(); this.deleteDecorItem(item.id); });
+    el.appendChild(deleteBtn);
+
+    this.attachDecorDrag(el, item);
+    this.attachDecorResize(resizeHandle, el, item);
+    this.attachDecorRotate(rotateHandle, el, item);
+
+    layer.appendChild(el);
+  },
+
+  attachDecorDrag(boxEl, item) {
+    boxEl.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('.calendar-decor-resize-handle, .calendar-decor-rotate-handle, .calendar-decor-delete')) return;
+      e.preventDefault();
+
+      const startX = e.clientX, startY = e.clientY;
+      const origLeft = parseFloat(boxEl.style.left);
+      const origTop = parseFloat(boxEl.style.top);
+      boxEl.style.zIndex = ++this.decorNextZ;
+      boxEl.setPointerCapture(e.pointerId);
+
+      const onMove = (ev) => {
+        boxEl.style.left = (origLeft + ev.clientX - startX) + 'px';
+        boxEl.style.top = (origTop + ev.clientY - startY) + 'px';
+      };
+      const onUp = () => {
+        boxEl.removeEventListener('pointermove', onMove);
+        boxEl.removeEventListener('pointerup', onUp);
+        item.x = parseFloat(boxEl.style.left);
+        item.y = parseFloat(boxEl.style.top);
+        item.z = this.decorNextZ;
+        this.saveDecor();
+      };
+      boxEl.addEventListener('pointermove', onMove);
+      boxEl.addEventListener('pointerup', onUp);
+    });
+  },
+
+  attachDecorResize(handle, boxEl, item) {
+    handle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const origW = parseFloat(boxEl.style.width);
+      const origH = parseFloat(boxEl.style.height);
+      handle.setPointerCapture(e.pointerId);
+
+      const onMove = (ev) => {
+        const scale = Math.max(0.2, (origW + ev.clientX - startX) / origW);
+        boxEl.style.width = Math.max(24, origW * scale) + 'px';
+        boxEl.style.height = Math.max(24, origH * scale) + 'px';
+      };
+      const onUp = () => {
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        item.w = parseFloat(boxEl.style.width);
+        item.h = parseFloat(boxEl.style.height);
+        this.saveDecor();
+      };
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup', onUp);
+    });
+  },
+
+  attachDecorRotate(handle, boxEl, item) {
+    handle.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      handle.setPointerCapture(e.pointerId);
+
+      const onMove = (ev) => {
+        const rect = boxEl.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const angle = Math.atan2(ev.clientY - centerY, ev.clientX - centerX) * 180 / Math.PI + 90;
+        boxEl.style.transform = `rotate(${angle}deg)`;
+      };
+      const onUp = () => {
+        handle.removeEventListener('pointermove', onMove);
+        handle.removeEventListener('pointerup', onUp);
+        const match = boxEl.style.transform.match(/rotate\(([-\d.]+)deg\)/);
+        item.rotation = match ? parseFloat(match[1]) : 0;
+        this.saveDecor();
+      };
+      handle.addEventListener('pointermove', onMove);
+      handle.addEventListener('pointerup', onUp);
+    });
   }
 };

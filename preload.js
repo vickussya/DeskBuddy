@@ -20,6 +20,12 @@ contextBridge.exposeInMainWorld('api', {
 
   getPlanItems: (dateId) => ipcRenderer.invoke('get-plan-items', dateId),
   savePlanItems: (dateId, items) => ipcRenderer.invoke('save-plan-items', dateId, items),
+  getAllPlanItems: () => ipcRenderer.invoke('get-plan-items-all'),
+
+  getCalendarDecor: (dateId) => ipcRenderer.invoke('get-calendar-decor', dateId),
+  saveCalendarDecor: (dateId, items) => ipcRenderer.invoke('save-calendar-decor', dateId, items),
+  importCalendarPhoto: (srcPath) => ipcRenderer.invoke('import-calendar-photo', srcPath),
+  pickCalendarPhotos: () => ipcRenderer.invoke('pick-calendar-photos'),
 
   getFoldersShortcuts: (boardId) => ipcRenderer.invoke('get-folders-shortcuts', boardId),
   saveFoldersShortcuts: (boardId, data) => ipcRenderer.invoke('save-folders-shortcuts', boardId, data),

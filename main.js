@@ -55,12 +55,14 @@ let userDataPath = null;
 let diaryDir = null;
 let inspoDir = null;
 let inspoMediaDir = null;
+let calendarMediaDir = null;
 
 function initStore() {
   userDataPath = app.getPath('userData');
   diaryDir = path.join(userDataPath, 'diary');
   inspoDir = path.join(userDataPath, 'inspo');
   inspoMediaDir = path.join(inspoDir, 'media');
+  calendarMediaDir = path.join(userDataPath, 'calendarMedia');
   const storePath = path.join(userDataPath, 'deskbuddy-config.json');
   store = new JsonStore(storePath, {
     schemaVersion: 1,
@@ -80,10 +82,12 @@ function initStore() {
     studioWindowBounds: null,
     goals: [],
     goalsByWorkspace: {},
-    plansByDate: {}
+    plansByDate: {},
+    calendarDecor: {}
   });
   if (!fs.existsSync(diaryDir)) fs.mkdirSync(diaryDir, { recursive: true });
   if (!fs.existsSync(inspoMediaDir)) fs.mkdirSync(inspoMediaDir, { recursive: true });
+  if (!fs.existsSync(calendarMediaDir)) fs.mkdirSync(calendarMediaDir, { recursive: true });
 }
 
 function getDiaryFilePath(dateId) {
@@ -486,6 +490,42 @@ ipcMain.handle('get-plan-items', (_, dateId) => {
 ipcMain.handle('save-plan-items', (_, dateId, items) => {
   store.set(`plansByDate.${dateId}`, items);
   return true;
+});
+
+ipcMain.handle('get-plan-items-all', () => {
+  return store.get('plansByDate', {});
+});
+
+ipcMain.handle('get-calendar-decor', (_, dateId) => {
+  return store.get(`calendarDecor.${dateId}`, []);
+});
+
+ipcMain.handle('save-calendar-decor', (_, dateId, items) => {
+  store.set(`calendarDecor.${dateId}`, items);
+  return true;
+});
+
+ipcMain.handle('import-calendar-photo', (_, srcPath) => {
+  const ext = path.extname(srcPath) || '.png';
+  const destPath = path.join(calendarMediaDir, uniqueMediaName(ext));
+  fs.copyFileSync(srcPath, destPath);
+  return destPath;
+});
+
+ipcMain.handle('pick-calendar-photos', async () => {
+  const parent = studioWindow && !studioWindow.isDestroyed() ? studioWindow : undefined;
+  const result = await dialog.showOpenDialog(parent, {
+    title: 'Add Photos to Calendar',
+    filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'] }],
+    properties: ['openFile', 'multiSelections']
+  });
+  if (result.canceled) return [];
+  return result.filePaths.map(srcPath => {
+    const ext = path.extname(srcPath) || '.png';
+    const destPath = path.join(calendarMediaDir, uniqueMediaName(ext));
+    fs.copyFileSync(srcPath, destPath);
+    return destPath;
+  });
 });
 
 ipcMain.handle('get-folders-shortcuts', (_, boardId) => {

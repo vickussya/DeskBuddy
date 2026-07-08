@@ -285,11 +285,52 @@ Studio.goals = {
         this.persist();
         this.renderNotebookChecklist();
       },
-      extraControls: (task) => this.buildTaskExtraControls(goal, task)
+      mainExtras: (task) => this.buildTaskMainExtras(goal, task),
+      extraControls: (task) => this.buildTaskPeriodControls(goal, task)
     });
   },
 
-  buildTaskExtraControls(goal, task) {
+  // Always-visible controls on the checklist row itself (sticker + Folders
+  // — kept directly on the row per the user's ask to restore them to how
+  // they looked before, rather than hidden behind the expand toggle).
+  buildTaskMainExtras(goal, task) {
+    const wrap = document.createElement('div');
+    wrap.className = 'checklist-main-extras';
+
+    const stickerBadge = document.createElement('div');
+    stickerBadge.className = 'task-sticker-badge';
+    stickerBadge.title = 'Sticker';
+    const stickerSrc = task.stickerId ? Studio.stickers.getStickerSrc(task.stickerId) : null;
+    if (stickerSrc) {
+      const img = document.createElement('img');
+      img.src = stickerSrc;
+      stickerBadge.appendChild(img);
+    } else {
+      stickerBadge.classList.add('task-sticker-badge-empty');
+      stickerBadge.textContent = '+';
+    }
+    stickerBadge.addEventListener('click', () => {
+      Studio.stickers.openPicker(stickerBadge, (stickerId) => {
+        task.stickerId = stickerId;
+        this.persist();
+        this.renderNotebookChecklist();
+      });
+    });
+
+    const btnFolders = document.createElement('button');
+    btnFolders.className = 'task-btn';
+    btnFolders.textContent = '📁';
+    btnFolders.title = 'Folders for this task';
+    btnFolders.addEventListener('click', () => Studio.folders.openForTask(task.id, task.text));
+
+    wrap.appendChild(stickerBadge);
+    wrap.appendChild(btnFolders);
+    return wrap;
+  },
+
+  // Period stays in the expanded section alongside the description — it's
+  // a newer field with no "before" state to restore.
+  buildTaskPeriodControls(goal, task) {
     const wrap = document.createElement('div');
     wrap.className = 'checklist-extra-controls';
 
@@ -320,36 +361,8 @@ Studio.goals = {
       this.persist();
     });
 
-    const stickerBadge = document.createElement('div');
-    stickerBadge.className = 'task-sticker-badge';
-    stickerBadge.title = 'Sticker';
-    const stickerSrc = task.stickerId ? Studio.stickers.getStickerSrc(task.stickerId) : null;
-    if (stickerSrc) {
-      const img = document.createElement('img');
-      img.src = stickerSrc;
-      stickerBadge.appendChild(img);
-    } else {
-      stickerBadge.classList.add('task-sticker-badge-empty');
-      stickerBadge.textContent = '+';
-    }
-    stickerBadge.addEventListener('click', () => {
-      Studio.stickers.openPicker(stickerBadge, (stickerId) => {
-        task.stickerId = stickerId;
-        this.persist();
-        this.renderNotebookChecklist();
-      });
-    });
-
-    const btnFolders = document.createElement('button');
-    btnFolders.className = 'task-btn';
-    btnFolders.textContent = '📁';
-    btnFolders.title = 'Folders for this task';
-    btnFolders.addEventListener('click', () => Studio.folders.openForTask(task.id, task.text));
-
     wrap.appendChild(startInput);
     wrap.appendChild(endInput);
-    wrap.appendChild(stickerBadge);
-    wrap.appendChild(btnFolders);
     return wrap;
   },
 
